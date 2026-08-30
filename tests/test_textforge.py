@@ -448,6 +448,54 @@ Posts exported: 3
 """
 
 
+class PromptQuotasTest(unittest.TestCase):
+    """Числовые требования промта: 3-7 тем, 3-5 сильных и слабых сторон, честные флаги."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.analysis = analyze(load_channel(str(SAMPLE)))
+        cls.md = render_markdown(cls.analysis)
+
+    def _bullets(self, header, *stops):
+        section = self.md.split(header, 1)[1]
+        for stop in stops:
+            if stop in section:
+                section = section.split(stop, 1)[0]
+        return [l for l in section.splitlines() if l.startswith("•")]
+
+    def test_topics_between_three_and_seven(self):
+        import re
+
+        line = re.search(r"🏷 (.+)", self.md)
+        self.assertIsNotNone(line, "в отчёте нет строки с темами")
+        topics = [t.strip() for t in line.group(1).split(",") if t.strip()]
+        self.assertGreaterEqual(len(topics), 3, topics)
+        self.assertLessEqual(len(topics), 7, topics)
+
+    def test_strengths_between_three_and_five(self):
+        items = self._bullets("💪 **СИЛЬНЫЕ СТОРОНЫ**", "⚠️ **СЛАБЫЕ СТОРОНЫ**")
+        self.assertGreaterEqual(len(items), 3, items)
+        self.assertLessEqual(len(items), 5, items)
+
+    def test_weaknesses_between_three_and_five(self):
+        items = self._bullets("⚠️ **СЛАБЫЕ СТОРОНЫ**", "━" * 18)
+        self.assertGreaterEqual(len(items), 3, items)
+        self.assertLessEqual(len(items), 5, items)
+
+    def test_red_flags_either_substantiated_or_explicitly_absent(self):
+        section = self.md.split("🚩 **КРАСНЫЕ ФЛАГИ**", 1)[1].split("━" * 18)[0]
+        bullets = [l for l in section.splitlines() if l.startswith("•")]
+        if not bullets:
+            self.assertIn("Существенных красных флагов", section)
+            return
+        # каждый показанный флаг обязан ссылаться на реально существующие посты
+        known = {str(pa.post.number) for pa in self.analysis.posts}
+        for flag, info in self.analysis.red_flags.items():
+            self.assertGreaterEqual(info["count"], 1, flag)
+            for ex in info["examples"]:
+                self.assertIn(str(ex["id"]), known, f"флаг {flag} ссылается на несуществующий пост")
+
+
 class DegenerateInputTest(unittest.TestCase):
     """Один пост, битые даты, пост только с медиа — не должны ронять конвейер."""
 
