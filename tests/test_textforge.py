@@ -327,5 +327,124 @@ class SampleDataTest(unittest.TestCase):
         self.assertEqual(ch.warnings, [])
 
 
+class DeterminismTest(unittest.TestCase):
+    """Отчёт обязан быть побайтово одинаковым между запусками (PYTHONHASHSEED случайный)."""
+
+    def test_repeated_runs_are_identical_across_hash_seeds(self):
+        import hashlib
+        import os
+        import subprocess
+        import tempfile
+
+        repo = Path(__file__).resolve().parent.parent
+        digests = set()
+        for seed in ("0", "1", "42"):
+            env = dict(os.environ, PYTHONHASHSEED=seed)
+            with tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp) / "r.md"
+                subprocess.run(
+                    [sys.executable, "analyze_channel.py", str(SAMPLE), "--md", str(out), "--quiet"],
+                    cwd=repo, env=env, check=True, capture_output=True,
+                )
+                digests.add(hashlib.md5(out.read_bytes()).hexdigest())
+        self.assertEqual(len(digests), 1, f"отчёт недетерминирован: {digests}")
+
+    def test_clients_sorted_by_count_then_name(self):
+        ch = load_channel(str(SAMPLE))
+        data = to_dict(analyze(ch))
+        clients = data["author"]["clients_mentioned"]
+        parsed = [(name, int(cnt.rstrip(")"))) for name, cnt in
+                  (item.rsplit(" (", 1) for item in clients)]
+        counts = [c for _, c in parsed]
+        self.assertEqual(counts, sorted(counts, reverse=True))
+        for (n1, c1), (n2, c2) in zip(parsed, parsed[1:]):
+            if c1 == c2:
+                self.assertLess(n1, n2, "равные счётчики должны идти по алфавиту")
+
+
+class CliTest(unittest.TestCase):
+    """Проверяем коды выхода и ключи CLI, включая ранее падавший случай с отсутствующим файлом."""
+
+    NO_USERNAME = """# Exported channel history
+
+Posts exported: 1
+
+## Post 1
+**Date:** 2024-05-01 10:00:00
+**Views:** 1000
+
+### Text
+
+1. Сделай аудит.
+2. Посчитай цифры.
+Потому что иначе не поймёшь, сколько денег уходит в рекламу.
+"""
+
+    def setUp(self):
+        import io
+        import tempfile
+
+        self._io = io
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+
+    def _run(self, argv):
+        from textforge import cli
+
+        buf_out, buf_err = self._io.StringIO(), self._io.StringIO()
+        real_out, real_err = sys.stdout, sys.stderr
+        sys.stdout, sys.stderr = buf_out, buf_err
+        try:
+            code = cli.main(argv)
+        finally:
+            sys.stdout, sys.stderr = real_out, real_err
+        return code, buf_out.getvalue(), buf_err.getvalue()
+
+    def test_missing_file_returns_1_without_traceback(self):
+        code, _, err = self._run([str(self.root / "nope.md"), "--quiet"])
+        self.assertEqual(code, 1)
+        self.assertIn("Не удалось прочитать файл", err)
+        self.assertNotIn("Traceback", err)
+
+    def test_file_without_posts_returns_1(self):
+        empty = self.root / "empty.md"
+        empty.write_text("", encoding="utf-8")
+        code, _, err = self._run([str(empty), "--quiet"])
+        self.assertEqual(code, 1)
+        self.assertIn("не найдено ни одного поста", err)
+
+    def test_no_input_prints_help_and_returns_2(self):
+        code, out, _ = self._run([])
+        self.assertEqual(code, 2)
+        self.assertIn("usage:", out.lower())
+
+    def test_handle_fills_missing_username(self):
+        src = self.root / "nouser.md"
+        src.write_text(self.NO_USERNAME, encoding="utf-8")
+        code, out, _ = self._run([str(src), "--handle", "@my_chan", "--quiet"])
+        self.assertEqual(code, 0)
+        self.assertIn("@my_chan", out)
+
+    def test_md_and_json_are_written(self):
+        src = self.root / "nouser.md"
+        src.write_text(self.NO_USERNAME, encoding="utf-8")
+        md, js = self.root / "sub" / "r.md", self.root / "r.json"
+        code, _, _ = self._run([str(src), "--md", str(md), "--json", str(js), "--quiet"])
+        self.assertEqual(code, 0)
+        self.assertIn("📊 **СВОДКА ПО КАНАЛУ", md.read_text(encoding="utf-8"))
+        data = json.loads(js.read_text(encoding="utf-8"))
+        self.assertEqual(len(data["posts"]), 1)
+
+    def test_explain_returns_json_for_post(self):
+        src = self.root / "nouser.md"
+        src.write_text(self.NO_USERNAME, encoding="utf-8")
+        code, out, _ = self._run([str(src), "--explain", "1", "--quiet"])
+        self.assertEqual(code, 0)
+        data = json.loads(out)
+        self.assertEqual(data["id"], 1)
+        self.assertIn("usefulness", data["scores"])
+
+
 if __name__ == "__main__":
     unittest.main()

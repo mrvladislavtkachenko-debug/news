@@ -741,7 +741,9 @@ class ChannelAnalysis:
                     if word.startswith(key):
                         found.add(name)
                         break
-            for name in found:
+            # sorted(): порядок обхода set зависит от PYTHONHASHSEED,
+            # а Counter.most_common() сохраняет порядок вставки для равных счётчиков
+            for name in sorted(found):
                 clients[name] += 1
         return {
             "name": ch.title or ch.username or "нет данных",
@@ -749,7 +751,10 @@ class ChannelAnalysis:
             "subscribers": "нет данных",
             "positioning": positioning,
             "personal_brand": round(100.0 * len(first_person_posts) / max(len(self.posts), 1), 1),
-            "clients_mentioned": [f"{name} ({cnt})" for name, cnt in clients.most_common(6)],
+            "clients_mentioned": [
+                f"{name} ({cnt})"
+                for name, cnt in sorted(clients.items(), key=lambda kv: (-kv[1], kv[0]))[:6]
+            ],
         }
 
     def _facts_block(self) -> list[str]:

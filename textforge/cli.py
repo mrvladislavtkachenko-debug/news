@@ -3,7 +3,6 @@
     python3 analyze_channel.py data/channel.md
     python3 analyze_channel.py data/channel.md --json report.json --md report.md
     python3 analyze_channel.py data/channel.md --explain 205
-    python3 analyze_channel.py data/channel.md --selftest
 """
 
 from __future__ import annotations
@@ -32,7 +31,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="домены автора через запятую, например sdelaem.agency,molyanov.notion.site",
     )
-    p.add_argument("--handle", default="", help="username канала без @ (обычно берётся из файла)")
+    p.add_argument(
+        "--handle",
+        default="",
+        help="username канала (подставится в отчёт, если в экспорте его нет, "
+             "и позволит отличать собственные ссылки от внешних)",
+    )
     p.add_argument("--quiet", action="store_true", help="не печатать служебную статистику в stderr")
     return p
 
@@ -44,7 +48,20 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     started = time.time()
-    channel = load_channel(args.input)
+    try:
+        channel = load_channel(args.input)
+    except OSError as exc:
+        print(f"Не удалось прочитать файл: {exc}", file=sys.stderr)
+        return 1
+    if not channel.posts:
+        print(
+            f"В файле {args.input} не найдено ни одного поста. "
+            "Ожидается Markdown-экспорт с заголовками вида «## Post 123».",
+            file=sys.stderr,
+        )
+        return 1
+    if args.handle.strip() and not channel.username:
+        channel.username = args.handle.strip().lstrip("@")
     config = AnalyzerConfig(
         own_domains=[d.strip() for d in args.own_domains.split(",") if d.strip()],
         channel_handle=args.handle.strip().lstrip("@"),
