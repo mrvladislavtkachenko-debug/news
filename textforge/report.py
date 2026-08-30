@@ -321,13 +321,13 @@ def render_markdown(a: ChannelAnalysis) -> str:
                 f"({info['share']}% выборки), например {refs}"
             )
         add("")
-        if a.contradictions:
-            add("Противоречия между постами:")
-            for c in a.contradictions:
-                add(f"• {c}")
-            add("")
     else:
         add("**Существенных красных флагов в анализируемой выборке не обнаружено.**")
+        add("")
+    if a.contradictions:
+        add("Противоречия между постами:")
+        for c in a.contradictions:
+            add(f"• {c}")
         add("")
     add(LINE)
 

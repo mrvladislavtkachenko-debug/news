@@ -418,6 +418,93 @@ Posts exported: 3
 """
 
 
+CONTRA_FIXTURE = """# Exported channel history
+
+Posts exported: 3
+
+## Post 1
+**Date:** 2024-05-01 10:00:00
+**Views:** 1000
+
+### Text
+
+Прогрев работает отлично и приносит продажи. Надо обязательно прогревать аудиторию перед запуском.
+
+## Post 2
+**Date:** 2024-06-01 10:00:00
+**Views:** 900
+
+### Text
+
+Прогрев не работает, это манипуляция и бесполезно. Не ведись на такие схемы, это развод.
+
+## Post 3
+**Date:** 2024-07-01 10:00:00
+**Views:** 800
+
+### Text
+
+Как считать юнит-экономику: сделай таблицу, посчитай маржу, проверь когорты по месяцам.
+"""
+
+
+class RedFlagsTest(unittest.TestCase):
+    """В промте 12 красных флагов — все должны быть представимы в отчёте."""
+
+    PROMPT_FLAGS = {
+        "обещания гарантированного результата": "обещания гарантированного результата",
+        "«секретные» схемы заработка": "«секретные» схемы заработка",
+        "демонстрация исключительно успехов": "демонстрация исключительно успехов",
+        "отсутствие подтверждений громких результатов": "громкие результаты без подтверждений",
+        "давление на аудиторию": "давление на аудиторию",
+        "постоянные продажи": "постоянные продажи",
+        "манипулятивный дефицит": "манипулятивный дефицит",
+        "чрезмерный кликбейт": "чрезмерный кликбейт",
+        "подмена доказательств статусом автора": "подмена доказательств статусом автора",
+        "универсальные советы без учёта контекста": "универсальные советы без контекста",
+        "псевдоэкспертность": "псевдоэкспертность",
+        # считается отдельно от лексикона — по расхождению позиций между постами
+        "противоречия между постами": "противоречия между постами",
+    }
+
+    def test_all_twelve_flags_are_implemented(self):
+        from textforge import lexicons as LX
+
+        self.assertEqual(len(self.PROMPT_FLAGS), 12)
+        available = set(LX.RED_FLAGS) | {"противоречия между постами"}
+        self.assertEqual(
+            {v for v in self.PROMPT_FLAGS.values()} - available,
+            set(),
+            "не все флаги из промта реализованы",
+        )
+
+    def test_contradiction_becomes_a_red_flag(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "contra.md"
+            path.write_text(CONTRA_FIXTURE, encoding="utf-8")
+            result = analyze(load_channel(str(path)))
+
+        self.assertEqual(len(result.contradictions), 1)
+        flag = result.red_flags["противоречия между постами"]
+        self.assertEqual(flag["count"], 2)
+        self.assertEqual([e["id"] for e in flag["examples"]], [1, 2])
+        self.assertIn("прогрев", result.contradictions[0])
+
+    def test_contradictions_render_in_report(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "contra.md"
+            path.write_text(CONTRA_FIXTURE, encoding="utf-8")
+            md = render_markdown(analyze(load_channel(str(path))))
+
+        section = md.split("🚩 **КРАСНЫЕ ФЛАГИ**", 1)[1].split("━" * 18)[0]
+        self.assertIn("противоречия между постами", section)
+        self.assertIn("Противоречия между постами:", section)
+
+
 class DedupWiringTest(unittest.TestCase):
     """Дедупликация обязана влиять на оригинальность и попадать в слабые стороны."""
 

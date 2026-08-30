@@ -695,8 +695,19 @@ class ChannelAnalysis:
         if not ads:
             self.red_flags.pop("постоянные продажи")
 
-        # ---- противоречия
-        self.contradictions = self._find_contradictions()
+        # ---- противоречия (12-й красный флаг из промта)
+        pairs = self._find_contradictions()
+        self.contradictions = [text for text, _ in pairs]
+        if self.contradictions:
+            ids = sorted({i for _, post_ids in pairs for i in post_ids})
+            self.red_flags["противоречия между постами"] = {
+                "count": len(ids),
+                "share": round(100.0 * len(ids) / max(len(posts), 1), 1),
+                "examples": [
+                    {"id": i, "link": "", "terms": ["позиция по одной теме меняется от поста к посту"]}
+                    for i in ids[:3]
+                ],
+            }
 
         # ---- автор
         self.author = self._author_block(claim_posts)
@@ -713,8 +724,9 @@ class ChannelAnalysis:
         return self
 
     # ------------------------------------------------------------------
-    def _find_contradictions(self) -> list[str]:
-        out: list[str] = []
+    def _find_contradictions(self) -> list[tuple[str, list[int]]]:
+        """Возвращает (описание, номера постов) для каждой найденной пары противоречий."""
+        out: list[tuple[str, list[int]]] = []
         for subj in SUBJECTS:
             pos, neg = [], []
             for pa in self.posts:
@@ -728,10 +740,12 @@ class ChannelAnalysis:
                 elif any(w in text for w in NEGATIVE):
                     neg.append(pa)
             if pos and neg:
-                out.append(
+                involved = neg[:2] + pos[:2]
+                text = (
                     f"«{subj}»: посты {', '.join(str(p.post.number) for p in neg[:2])} оценивают негативно, "
                     f"а {', '.join(str(p.post.number) for p in pos[:2])} — позитивно"
                 )
+                out.append((text, [p.post.number for p in involved]))
         return out[:5]
 
     def _author_block(self, claim_posts: list[PostAnalysis]) -> dict:
