@@ -448,6 +448,56 @@ Posts exported: 3
 """
 
 
+class PortabilityTest(unittest.TestCase):
+    """CLI обязан запускаться из любой директории и как модуль."""
+
+    REPO = Path(__file__).resolve().parent.parent
+
+    def _run(self, args, cwd):
+        import subprocess
+
+        return subprocess.run(
+            [sys.executable, *args],
+            cwd=cwd, capture_output=True, text=True,
+        )
+
+    def test_entrypoint_works_from_another_cwd(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = self._run(
+                [str(self.REPO / "analyze_channel.py"), str(SAMPLE), "--quiet"], tmp
+            )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("📊 **СВОДКА ПО КАНАЛУ", proc.stdout)
+
+    def test_runs_as_a_module(self):
+        proc = self._run(
+            ["-m", "textforge.cli", str(SAMPLE), "--quiet"], self.REPO
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("📊 **СВОДКА ПО КАНАЛУ", proc.stdout)
+
+    def test_package_importable_from_outside(self):
+        import os
+        import subprocess
+        import tempfile
+
+        code = (
+            "import textforge;"
+            f"r = textforge.analyze_file({str(SAMPLE)!r});"
+            "print(type(r).__name__, r.analysis.verdict['label'])"
+        )
+        env = dict(os.environ, PYTHONPATH=str(self.REPO))
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = subprocess.run(
+                [sys.executable, "-c", code],
+                cwd=tmp, env=env, capture_output=True, text=True,
+            )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("AnalysisResult", proc.stdout)
+
+
 class ReportHelpersTest(unittest.TestCase):
     """_cut не рвёт слова, а ограничение практики собирается из данных поста."""
 
