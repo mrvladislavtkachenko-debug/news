@@ -327,6 +327,65 @@ class SampleDataTest(unittest.TestCase):
         self.assertEqual(ch.warnings, [])
 
 
+class OwnLinkTest(unittest.TestCase):
+    """--own-domains и определение собственных ссылок (влияют на «доверие» через ext_links)."""
+
+    def analyzer(self, domains):
+        from textforge.analyze import ChannelAnalyzer
+
+        return ChannelAnalyzer(
+            AnalyzerConfig(own_domains=list(domains), channel_handle="molyanov_blog")
+        )
+
+    def test_flag_marks_domain_as_own(self):
+        share = {"vc.ru": 0.02, "example.org": 0.02}
+        self.assertFalse(self.analyzer([])._is_own_link("https://vc.ru/x", share))
+        self.assertTrue(self.analyzer(["vc.ru"])._is_own_link("https://vc.ru/x", share))
+
+    def test_subdomain_of_own_domain(self):
+        share = {"sdelaem.vc.ru": 0.02}
+        self.assertTrue(self.analyzer(["vc.ru"])._is_own_link("https://sdelaem.vc.ru/x", share))
+
+    def test_channel_handle_is_own(self):
+        share = {}
+        a = self.analyzer([])
+        self.assertTrue(a._is_own_link("https://t.me/molyanov_blog/5", share))
+        self.assertFalse(a._is_own_link("https://t.me/someone_else/5", share))
+
+    def test_repeated_host_counts_as_own_platform(self):
+        # эвристика: домен, на который приходится >=8% всех ссылок, считается своей площадкой
+        self.assertTrue(self.analyzer([])._is_own_link("https://vc.ru/x", {"vc.ru": 0.5}))
+        self.assertFalse(self.analyzer([])._is_own_link("https://vc.ru/x", {"vc.ru": 0.02}))
+
+    def test_external_links_raise_trust(self):
+        ch = load_channel(str(SAMPLE))
+        base = analyze(ch, AnalyzerConfig())
+        # помечаем все домены как свои -> внешних ссылок не остаётся, доверие не должно вырасти
+        own_all = analyze(
+            ch, AnalyzerConfig(own_domains=["t.me", "molyanov.blog", "sdelaem.agency"])
+        )
+        self.assertLessEqual(own_all.indices["trust"], base.indices["trust"] + 0.01)
+
+
+class PublicApiTest(unittest.TestCase):
+    """analyze_file из README обязан работать ровно так, как там написано."""
+
+    def test_analyze_file_returns_three_views(self):
+        import textforge
+
+        result = textforge.analyze_file(str(SAMPLE))
+        self.assertIsInstance(result, textforge.AnalysisResult)
+        self.assertIn("📊 **СВОДКА ПО КАНАЛУ", result.markdown)
+        self.assertEqual(result.markdown, textforge.render_markdown(result.analysis))
+        self.assertEqual(
+            result.data["indices"]["usefulness"], result.analysis.indices["usefulness"]
+        )
+
+    def test_to_dict_and_to_json_agree(self):
+        result = analyze_file(str(SAMPLE))
+        self.assertEqual(json.loads(to_json(result.analysis)), result.data)
+
+
 class DeterminismTest(unittest.TestCase):
     """Отчёт обязан быть побайтово одинаковым между запусками (PYTHONHASHSEED случайный)."""
 

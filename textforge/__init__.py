@@ -11,12 +11,16 @@
     print(result.markdown)
 """
 
-from .analyze import AnalyzerConfig, ChannelAnalyzer, analyze
+from dataclasses import dataclass
+from typing import Any
+
+from .analyze import AnalyzerConfig, ChannelAnalysis, ChannelAnalyzer, analyze
 from .report import render_markdown, to_dict, to_json
 from .tgparser import Channel, Post, load_channel, parse_channel
 
 __all__ = [
     "AnalyzerConfig",
+    "AnalysisResult",
     "ChannelAnalyzer",
     "Channel",
     "Post",
@@ -32,18 +36,22 @@ __all__ = [
 __version__ = "0.1.0"
 
 
-def analyze_file(path: str, *, own_domains: list[str] | None = None, handle: str = ""):
-    """Однострочный API: прочитать экспорт канала и получить (markdown, json_dict, анализ)."""
-    from dataclasses import dataclass
+@dataclass
+class AnalysisResult:
+    """Результат `analyze_file`: отчёт в трёх видах сразу."""
 
+    markdown: str
+    data: dict
+    analysis: ChannelAnalysis
+
+
+def analyze_file(
+    path: str, *, own_domains: list[str] | None = None, handle: str = ""
+) -> AnalysisResult:
+    """Однострочный API: прочитать экспорт канала и получить отчёт, dict и сам анализ."""
     channel = load_channel(path)
     config = AnalyzerConfig(own_domains=list(own_domains or []), channel_handle=handle)
     analysis = analyze(channel, config)
-
-    @dataclass
-    class Result:
-        markdown: str
-        data: dict
-        analysis: object
-
-    return Result(markdown=render_markdown(analysis), data=to_dict(analysis), analysis=analysis)
+    return AnalysisResult(
+        markdown=render_markdown(analysis), data=to_dict(analysis), analysis=analysis
+    )

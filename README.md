@@ -44,7 +44,7 @@ python3 analyze_channel.py ЭКСПОРТ.md [ключи]
 | Ключ | Что делает |
 |---|---|
 | `--md PATH` | отчёт в фиксированном Markdown-формате промта |
-| `--json PATH` | то же самое как JSON (индексы, категории, посты, сигналы) |
+| `--json PATH` | машина-читаемый результат: индексы, категории, темы, практики, красные флаги, аудитории, вердикт и все посты |
 | `--explain ID` | разбор одного поста: оценки, все сработавшие сигналы, структура |
 | `--handle @name` | username канала, если в экспорте его нет |
 | `--own-domains d1,d2` | домены, считающиеся собственными (не подтверждают ссылку на источник) |
@@ -58,6 +58,22 @@ python3 analyze_channel.py ЭКСПОРТ.md [ключи]
 
 ---
 
+## Python API
+
+```python
+import textforge
+
+result = textforge.analyze_file("data/sample_channel.md", own_domains=["sdelaem.agency"])
+print(result.analysis.indices["usefulness"], result.analysis.verdict["label"])
+
+result.markdown            # отчёт в формате промта
+result.data["red_flags"]   # dict (даты уже приведены к строкам)
+```
+
+`analyze_file` возвращает `AnalysisResult` (отчёт + dict + `ChannelAnalysis`).
+CLI делает то же самое через `analyze` и печатает результат через
+`render_markdown`/`to_json`; `to_dict` и `to_json` дают одинаковые данные.
+
 ## Как промт отображается в код
 
 Каждый пункт шаблона имеет конкретный модуль. Меняя поведение, правьте не отчёт, а источник.
@@ -69,7 +85,7 @@ python3 analyze_channel.py ЭКСПОРТ.md [ключи]
 | Деньги, проценты, ссылки, телефоны, законы, цитаты | `textforge/extract.py` |
 | Репосты/дубли (MinHash + LSH + Jaccard) | `textforge/dedup.py` |
 | Русские словари сигналов | `textforge/lexicons.py` |
-| Быстрый матчер (суффикс корня, префиксы, `*`-термины) | `textforge/scanner.py` |
+| Быстрый матчер (суффикс корня, префиксы, `*`-термины, дедуп по `(группа, корень)`) | `textforge/scanner.py` |
 | Индексы, категории, красные флаги, аудитории, вердикт | `textforge/analyze.py` |
 | Формат вывода, `to_dict`/`to_json` | `textforge/report.py` |
 | CLI | `textforge/cli.py` |
