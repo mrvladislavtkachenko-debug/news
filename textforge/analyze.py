@@ -406,7 +406,9 @@ class ChannelAnalyzer:
             for g in sorted(pa.hits, key=lambda g: -sum(pa.hits[g].values()))
             if g.startswith("topic:") and sum(pa.hits[g].values()) >= 2
         ][:5]
-        pa.audiences = [g[4:] for g in pa.hits if g.startswith("aud:") and sum(pa.hits[g].values()) >= 2]
+        # порог 1 термин: агрегированный порог «>=3 постов» ниже всё равно отсекает шум,
+        # а при пороге 2 на реальной выборке проходит одна группа вместо 3-5 по промту
+        pa.audiences = [g[4:] for g in pa.hits if g.startswith("aud:") and pa.hits[g]]
 
         pa.claims = pa.group_terms("claims", 5)
         pa.evidence = pa.group_terms("evidence", 5)

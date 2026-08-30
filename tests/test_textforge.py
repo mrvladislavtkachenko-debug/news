@@ -448,6 +448,31 @@ Posts exported: 3
 """
 
 
+class AudienceSectionTest(unittest.TestCase):
+    """Промт требует 3-5 групп «кому стоит читать» и отдельное «кому не подойдёт»."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.analysis = analyze(load_channel(str(SAMPLE)))
+        cls.md = render_markdown(cls.analysis)
+        cls.section = cls.md.split("👀 **КОМУ СТОИТ ЧИТАТЬ**", 1)[1].split("━" * 18)[0]
+
+    def test_between_three_and_five_groups(self):
+        positives = [l for l in self.section.splitlines() if l.startswith("✅")]
+        self.assertGreaterEqual(len(positives), 3, f"меньше трёх групп: {positives}")
+        self.assertLessEqual(len(positives), 5, f"больше пяти групп: {positives}")
+
+    def test_not_for_block_present(self):
+        negatives = [l for l in self.section.splitlines() if l.startswith("❌")]
+        self.assertGreaterEqual(len(negatives), 1)
+
+    def test_rendered_groups_carry_a_post_count(self):
+        # отчёт печатает не больше четырёх групп, поэтому проверяем именно их
+        for name, cnt in self.analysis.audiences[:4]:
+            self.assertGreaterEqual(cnt, 1)
+            self.assertIn(f"✅ {name} — тема затрагивается в {cnt} постах", self.section)
+
+
 class VerdictBranchesTest(unittest.TestCase):
     """Промт задаёт ровно четыре вердикта — каждый обязан быть достижимым."""
 
