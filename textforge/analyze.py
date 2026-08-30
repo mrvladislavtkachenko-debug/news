@@ -71,7 +71,6 @@ _FIRST_PERSON = re.compile(r"\b(я|мне|меня|мой|моя|моё|мое|�
 @dataclass
 class Structure:
     words: int = 0
-    chars: int = 0
     sentences: int = 0
     paragraphs: int = 0
     numbered_lines: int = 0
@@ -93,7 +92,6 @@ class Structure:
 def structure_of(doc: Doc) -> Structure:
     st = Structure()
     st.words = len(doc.tokens)
-    st.chars = len(doc.text)
     st.sentences = len(sentences(doc.text))
     st.links = _URL_RE.findall(doc.text)
     st.money = extract_money(doc)
