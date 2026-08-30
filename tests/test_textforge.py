@@ -448,6 +448,60 @@ Posts exported: 3
 """
 
 
+class BodySentencesTest(unittest.TestCase):
+    """Подзаголовок без точки не должен слипаться со следующим предложением."""
+
+    TEXT = """Заголовок поста
+
+Сделай кейсы без клиентов
+
+Хочешь писать статьи — возьми да напиши пару статей. Для себя. Про то, в чем разбираешься.
+
+Подробно расписывай процесс и предлагай идеи
+
+При обсуждении проекта задавай много вопросов, разберись в задаче и предложи решение.
+"""
+
+    def _analysis(self):
+        import tempfile
+
+        fixture = (
+            "# Exported channel history\n\nPosts exported: 1\n\n## Post 1\n"
+            "**Date:** 2024-05-01 10:00:00\n**Views:** 100\n\n### Text\n\n"
+            + self.TEXT
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.md"
+            path.write_text(fixture, encoding="utf-8")
+            return analyze(load_channel(str(path))).posts[0]
+
+    def test_subheading_is_not_glued_to_next_sentence(self):
+        from textforge.report import _body_sentences
+
+        sentences = _body_sentences(self._analysis())
+        for sent in sentences:
+            self.assertNotIn(
+                "Сделай кейсы без клиентов Хочешь",
+                sent,
+                f"подзаголовок склеен с предложением: {sent!r}",
+            )
+            self.assertNotIn(
+                "предлагай идеи При обсуждении",
+                sent,
+                f"подзаголовок склеен с предложением: {sent!r}",
+            )
+
+    def test_real_sentences_survive(self):
+        from textforge.report import _body_sentences
+
+        sentences = _body_sentences(self._analysis())
+        self.assertTrue(
+            any(s.startswith("Хочешь писать статьи") for s in sentences), sentences
+        )
+        # первая строка (заголовок поста) в пул не попадает
+        self.assertFalse(any(s.startswith("Заголовок поста") for s in sentences), sentences)
+
+
 class VerdictSectionTest(unittest.TestCase):
     """Промт: 3-5 предложений и четыре обязательных ответа в блоке «ВЕРДИКТ»."""
 

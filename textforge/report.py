@@ -33,14 +33,20 @@ def _clean(text: str) -> str:
 
 
 def _body_sentences(pa: PostAnalysis, min_len: int = 30) -> list[str]:
-    """Предложения поста без первой строки (она обычно дублирует заголовок)."""
+    """Предложения поста без первой строки (она обычно дублирует заголовок).
+
+    Разбиваем построчно: подзаголовки в постах стоят отдельной строкой без точки,
+    и если сначала склеить всё пробелом, подзаголовок слипается со следующим
+    предложением («Сделай кейсы без клиентов Хочешь писать статьи…»).
+    """
     lines = [ln.strip() for ln in pa.doc.text.splitlines() if ln.strip()]
-    body = " ".join(lines[1:]) if len(lines) > 1 else pa.doc.text
+    body_lines = lines[1:] if len(lines) > 1 else [pa.doc.text]
     out: list[str] = []
-    for chunk in _SENT_SPLIT.split(body):
-        cleaned = _clean(chunk)
-        if len(cleaned) >= min_len and cleaned not in out:
-            out.append(cleaned)
+    for line in body_lines:
+        for chunk in _SENT_SPLIT.split(line):
+            cleaned = _clean(chunk)
+            if len(cleaned) >= min_len and cleaned not in out:
+                out.append(cleaned)
     return out
 
 
