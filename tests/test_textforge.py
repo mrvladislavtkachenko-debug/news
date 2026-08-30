@@ -386,6 +386,83 @@ class PublicApiTest(unittest.TestCase):
         self.assertEqual(json.loads(to_json(result.analysis)), result.data)
 
 
+DUP_FIXTURE = """# Exported channel history
+
+Posts exported: 3
+
+## Post 1
+**Date:** 2024-05-01 10:00:00
+**Views:** 1000
+
+### Text
+
+Кейс: было 10 лидов, стало 40. Мы изменили оффер, переписали лендинг и получили рост 40%.
+Потому что старый оффер обещал слишком много. Вот что сделали: 1) убрали гарантии, 2) добавили цены.
+
+## Post 2
+**Date:** 2024-05-02 10:00:00
+**Views:** 900
+
+### Text
+
+Кейс: было 10 лидов, стало 40. Мы изменили оффер, переписали лендинг и получили рост 40%.
+Потому что старый оффер обещал слишком много. Вот что сделали: 1) убрали гарантии, 2) добавили цены.
+
+## Post 3
+**Date:** 2024-05-03 10:00:00
+**Views:** 800
+
+### Text
+
+Совершенно другая тема: как считать юнит-экономику. Сделай таблицу, посчитай маржу, проверь когорты.
+"""
+
+
+class DedupWiringTest(unittest.TestCase):
+    """Дедупликация обязана влиять на оригинальность и попадать в слабые стороны."""
+
+    def setUp(self):
+        import tempfile
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.path = Path(self.tmp.name) / "dup.md"
+        self.path.write_text(DUP_FIXTURE, encoding="utf-8")
+        self.result = analyze(load_channel(str(self.path)))
+
+    def test_second_copy_is_marked_as_duplicate(self):
+        by_id = {pa.doc.id: pa for pa in self.result.posts}
+        self.assertFalse(by_id["1"].is_duplicate)
+        self.assertTrue(by_id["2"].is_duplicate)
+        self.assertEqual(by_id["2"].duplicate_of, "1")
+        self.assertEqual(by_id["2"].dup_similarity, 1.0)
+        self.assertFalse(by_id["3"].is_duplicate)
+
+    def test_duplicate_caps_originality(self):
+        by_id = {pa.doc.id: pa for pa in self.result.posts}
+        self.assertLess(by_id["2"].originality, by_id["1"].originality)
+        self.assertLessEqual(by_id["2"].originality, 22.0)
+
+    def test_weakness_mentions_repetition_with_correct_agreement(self):
+        line = [w for w in self.result.weaknesses if "повторя" in w]
+        self.assertEqual(len(line), 1)
+        self.assertIn("1 пост практически повторяет ранее опубликованный", line[0])
+
+    def test_duplicates_are_in_to_dict(self):
+        data = to_dict(self.result)
+        self.assertEqual(data["duplicates"]["count"], 1)
+        self.assertEqual(data["duplicates"]["posts"][0]["duplicate_of"], "1")
+        self.assertEqual(
+            [p["duplicate_of"] for p in data["posts"]], [None, "1", None]
+        )
+
+    def test_explain_reports_duplicate(self):
+        self.assertEqual(
+            self.result.explain("2")["duplicate"],
+            {"is_duplicate": True, "duplicate_of": "1", "similarity": 1.0},
+        )
+
+
 class DeterminismTest(unittest.TestCase):
     """Отчёт обязан быть побайтово одинаковым между запусками (PYTHONHASHSEED случайный)."""
 
@@ -494,6 +571,12 @@ Posts exported: 1
         self.assertIn("📊 **СВОДКА ПО КАНАЛУ", md.read_text(encoding="utf-8"))
         data = json.loads(js.read_text(encoding="utf-8"))
         self.assertEqual(len(data["posts"]), 1)
+
+    def test_explain_unknown_post_returns_1_without_traceback(self):
+        code, _, err = self._run([str(SAMPLE), "--explain", "9999", "--quiet"])
+        self.assertEqual(code, 1)
+        self.assertIn("не найден", err)
+        self.assertNotIn("Traceback", err)
 
     def test_explain_returns_json_for_post(self):
         src = self.root / "nouser.md"

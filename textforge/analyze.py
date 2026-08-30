@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
 from . import lexicons as LX
+from .dedup import DedupResult, Deduper
 from .extract import extract_money, extract_percent
 from .scanner import FastLexicon
 from .text import Doc, plural, sentences
@@ -162,6 +163,11 @@ class PostAnalysis:
     limits: list[str] = field(default_factory=list)
     flags: dict[str, bool] = field(default_factory=dict)
     composite: float = 0.0
+
+    # -- дубликаты (MinHash + LSH, считаются до скоринга) -----------------------
+    is_duplicate: bool = False
+    duplicate_of: str | None = None
+    dup_similarity: float = 0.0
 
     # -- ссылки -----------------------------------------------------------------
     @property
@@ -334,6 +340,9 @@ class ChannelAnalyzer:
             score = min(score, 50.0)
         if s.words > 500 and s.first_person_density >= 3:
             score += 8.0
+        if pa.is_duplicate:
+            # пост повторяет уже опубликованный: оригинальности у него быть не может
+            score = min(score, 22.0 if pa.dup_similarity >= 1.0 else 34.0)
         return _clip(score)
 
     def _expertise(self, pa: PostAnalysis) -> float:
@@ -376,11 +385,20 @@ class ChannelAnalyzer:
         return _clip(score)
 
     # ---------------------------------------------------------------- публичный API
-    def analyze_post(self, post: Post, host_share: dict[str, float]) -> PostAnalysis:
+    def analyze_post(
+        self,
+        post: Post,
+        host_share: dict[str, float],
+        dup: DedupResult | None = None,
+    ) -> PostAnalysis:
         doc = Doc(str(post.number), post.text)
         struct = structure_of(doc)
         hits_obj = self.lexicon.scan(doc)
         pa = PostAnalysis(post=post, doc=doc, struct=struct, hits=hits_obj.counts)
+        if dup is not None and dup.is_duplicate:
+            pa.is_duplicate = True
+            pa.duplicate_of = dup.duplicate_of
+            pa.dup_similarity = dup.similarity
 
         for url in struct.links:
             pa.flags["own_link_" + url] = self._is_own_link(url, host_share)
@@ -419,7 +437,16 @@ class ChannelAnalyzer:
             cfg.channel_handle = channel.username or channel.source
         host_share = self._own_domain_ratio(channel)
 
-        posts = [self.analyze_post(p, host_share) for p in channel.posts]
+        # дедупликация считается до скоринга: оригинальность зависит от её результата
+        dup_map = (
+            Deduper().run([Doc(str(p.number), p.text) for p in channel.posts])
+            if len(channel.posts) > 1
+            else {}
+        )
+        posts = [
+            self.analyze_post(p, host_share, dup_map.get(str(p.number)))
+            for p in channel.posts
+        ]
         return ChannelAnalysis(channel=channel, posts=posts, host_share=host_share).compute()
 
 
@@ -831,6 +858,14 @@ class ChannelAnalysis:
             weaknesses.append(
                 f"Найдены расхождения в позициях по {len(self.contradictions)} темам (см. раздел противоречий)."
             )
+        dups = [pa for pa in self.posts if pa.is_duplicate]
+        if dups:
+            n = len(dups)
+            weaknesses.append(
+                f"{n} {plural(n, ('пост', 'поста', 'постов'))} практически "
+                f"{'повторяет ранее опубликованный' if n == 1 else 'повторяют ранее опубликованные'}"
+                f" — оригинальность этой части ленты нулевая."
+            )
         return strengths[:5], weaknesses[:5]
 
     def _verdict(self) -> dict:
@@ -875,6 +910,11 @@ class ChannelAnalysis:
                         g: dict(sorted(pa.hits[g].items(), key=lambda kv: -kv[1])[:8])
                         for g in sorted(pa.hits)
                         if not g.startswith(("cat:", "topic:", "aud:", "flag:")) and pa.hits[g]
+                    },
+                    "duplicate": {
+                        "is_duplicate": pa.is_duplicate,
+                        "duplicate_of": pa.duplicate_of,
+                        "similarity": pa.dup_similarity,
                     },
                     "structure": {
                         "words": pa.struct.words,

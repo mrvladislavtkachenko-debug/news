@@ -411,6 +411,7 @@ def _jsonable(obj):
 
 def to_dict(a: ChannelAnalysis) -> dict:
     ch = a.channel
+    dups = [pa for pa in a.posts if pa.is_duplicate]
     data = {
         "channel": {
             "title": ch.title,
@@ -428,6 +429,18 @@ def to_dict(a: ChannelAnalysis) -> dict:
         "categories": a.category_share,
         "ad_share": a.ad_share,
         "claim_density": a.claim_density,
+        "duplicates": {
+            "count": len(dups),
+            "share": round(100.0 * len(dups) / max(len(a.posts), 1), 1),
+            "posts": [
+                {
+                    "id": pa.post.number,
+                    "duplicate_of": pa.duplicate_of,
+                    "similarity": pa.dup_similarity,
+                }
+                for pa in dups[:10]
+            ],
+        },
         "forward_rate": a.forward_rate,
         "engagement": a.engagement,
         "topics_by_frequency": [{"topic": t, "posts": c} for t, c in a.topics_by_freq],
@@ -476,6 +489,7 @@ def to_dict(a: ChannelAnalysis) -> dict:
                 "depth": pa.depth,
                 "topics": pa.topics,
                 "claims": pa.claims,
+                "duplicate_of": pa.duplicate_of,
             }
             for pa in a.posts
         ],

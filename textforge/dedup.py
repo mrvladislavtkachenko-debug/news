@@ -120,7 +120,9 @@ class Deduper:
             self._buckets.setdefault(bucket, []).append(doc_id)
 
         best_id, best_sim = None, 0.0
-        for other in candidates:
+        # sorted(): порядок обхода set зависит от PYTHONHASHSEED, а при равной
+        # схожести победитель должен выбираться детерминированно
+        for other in sorted(candidates):
             sim = self.jaccard(sh, self._shingles[other])
             if sim > best_sim:
                 best_id, best_sim = other, sim

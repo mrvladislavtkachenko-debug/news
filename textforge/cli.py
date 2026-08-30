@@ -72,7 +72,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.explain:
         import json as _json
 
-        print(_json.dumps(analysis.explain(args.explain), indent=2, ensure_ascii=False))
+        try:
+            payload = analysis.explain(args.explain)
+        except KeyError as exc:
+            ids = ", ".join(str(p.post.number) for p in analysis.posts[:10])
+            print(f"Пост {exc.args[0].split()[1]} не найден. Доступные id: {ids} …", file=sys.stderr)
+            return 1
+        print(_json.dumps(payload, indent=2, ensure_ascii=False))
         return 0
 
     markdown = render_markdown(analysis)
