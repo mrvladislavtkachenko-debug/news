@@ -448,6 +448,40 @@ Posts exported: 3
 """
 
 
+class VerdictBranchesTest(unittest.TestCase):
+    """Промт задаёт ровно четыре вердикта — каждый обязан быть достижимым."""
+
+    def verdict(self, usefulness, expertise, trust, ad_share):
+        from textforge.analyze import ChannelAnalysis
+
+        analysis = ChannelAnalysis(channel=load_channel(str(SAMPLE)), posts=[])
+        analysis.indices = {
+            "usefulness": usefulness,
+            "expertise": expertise,
+            "trust": trust,
+            "originality": 60.0,
+            "depth": 60.0,
+        }
+        analysis.ad_share = ad_share
+        return analysis._verdict()["label"]
+
+    def test_green(self):
+        self.assertEqual(self.verdict(75, 70, 65, 10.0), "🟢 СТОИТ ИЗУЧАТЬ")
+
+    def test_yellow(self):
+        self.assertEqual(self.verdict(55, 40, 40, 30.0), "🟡 ЕСТЬ ПОЛЕЗНЫЕ ИДЕИ")
+
+    def test_orange(self):
+        self.assertEqual(self.verdict(40, 40, 40, 30.0), "🟠 ПОЛЕЗНО, НО ПЕРЕОЦЕНЕНО")
+
+    def test_red(self):
+        self.assertEqual(self.verdict(20, 30, 40, 60.0), "🔴 МАЛО ПОЛЕЗНОГО КОНТЕНТА")
+
+    def test_high_scores_with_heavy_ads_are_not_green(self):
+        # популярность и продажи не должны давать зелёный вердикт сами по себе
+        self.assertEqual(self.verdict(75, 70, 65, 50.0), "🟡 ЕСТЬ ПОЛЕЗНЫЕ ИДЕИ")
+
+
 class RedFlagsTest(unittest.TestCase):
     """В промте 12 красных флагов — все должны быть представимы в отчёте."""
 
