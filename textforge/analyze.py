@@ -523,6 +523,7 @@ class ChannelAnalysis:
     facts: list[str] = field(default_factory=list)
     claims: list[str] = field(default_factory=list)
     contradictions: list[str] = field(default_factory=list)
+    unverifiable: list[str] = field(default_factory=list)
 
     # ------------------------------------------------------------------
     def compute(self) -> "ChannelAnalysis":
@@ -695,6 +696,9 @@ class ChannelAnalysis:
         if not ads:
             self.red_flags.pop("постоянные продажи")
 
+        # ---- что нельзя подтвердить по самому файлу (обязательный пункт блока «ДОВЕРИЕ»)
+        self.unverifiable = self._unverifiable_block()
+
         # ---- противоречия (12-й красный флаг из промта)
         pairs = self._find_contradictions()
         self.contradictions = [text for text, _ in pairs]
@@ -724,6 +728,34 @@ class ChannelAnalysis:
         return self
 
     # ------------------------------------------------------------------
+    def _unverifiable_block(self) -> list[str]:
+        """Заявлено автором, но не проверяется по предоставленному файлу."""
+        out: list[str] = []
+        money_claims = [
+            pa
+            for pa in self.posts
+            if pa.struct.money
+            and re.search(r"\b(заработал|выручк|оборот|прибыл|сделали|получили)\w*", pa.doc.text, re.I)
+            and not pa.evidence
+        ]
+        if money_claims:
+            refs = ", ".join(str(pa.post.number) for pa in money_claims[:4])
+            out.append(f"финансовые результаты в постах {refs} — отчётов и выгрузок в выборке нет")
+        growth = [
+            pa
+            for pa in self.posts
+            if pa.struct.percent
+            and re.search(r"\b(рост|выросл|увеличил|прирост)\w*", pa.doc.text, re.I)
+            and not pa.evidence
+        ]
+        if growth:
+            refs = ", ".join(str(pa.post.number) for pa in growth[:4])
+            out.append(f"заявленный рост в процентах (посты {refs}) не сопровождается расчётами")
+        out.append(
+            "количество подписчиков, верификация и упоминания выступлений в файле не приведены"
+        )
+        return out[:3]
+
     def _find_contradictions(self) -> list[tuple[str, list[int]]]:
         """Возвращает (описание, номера постов) для каждой найденной пары противоречий."""
         out: list[tuple[str, list[int]]] = []

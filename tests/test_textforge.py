@@ -448,6 +448,40 @@ Posts exported: 3
 """
 
 
+class TrustSectionTest(unittest.TestCase):
+    """Промт требует в блоке «ДОВЕРИЕ» три обязательных пункта."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.analysis = analyze(load_channel(str(SAMPLE)))
+        cls.md = render_markdown(cls.analysis)
+        cls.section = cls.md.split("🛡 **ДОВЕРИЕ**", 1)[1].split("━" * 18)[0]
+
+    def test_lists_what_raises_trust(self):
+        self.assertIn("Повышают доверие:", self.section)
+
+    def test_lists_what_lowers_trust(self):
+        self.assertIn("Снижают:", self.section)
+
+    def test_lists_unverifiable_claims(self):
+        self.assertIn("Не подтверждается по имеющимся данным:", self.section)
+        self.assertGreaterEqual(len(self.analysis.unverifiable), 1)
+        # каждый пункт обязан быть и в отчёте, и в JSON
+        data = to_dict(self.analysis)
+        self.assertEqual(data["unverifiable"], self.analysis.unverifiable)
+
+    def test_disclaimer_present(self):
+        self.assertIn("не означает, что утверждения автора являются истинными", self.section)
+
+    def test_unverifiable_refs_only_real_posts(self):
+        import re
+
+        known = {str(pa.post.number) for pa in self.analysis.posts}
+        numbers = re.findall(r"\b(\d{1,4})\b", " ".join(self.analysis.unverifiable))
+        for num in numbers:
+            self.assertIn(num, known, f"ссылка на несуществующий пост {num}")
+
+
 class PromptQuotasTest(unittest.TestCase):
     """Числовые требования промта: 3-7 тем, 3-5 сильных и слабых сторон, честные флаги."""
 

@@ -360,6 +360,9 @@ def render_markdown(a: ChannelAnalysis) -> str:
         f"ссылки на источники встречаются в {evidence_posts} постах. "
         f"Снижают: маркетинговые заявления в {claim_posts} постах без подтверждающих материалов."
     )
+    if a.unverifiable:
+        add("")
+        add("Не подтверждается по имеющимся данным: " + "; ".join(a.unverifiable) + ".")
     add("")
     add(
         "Индекс отражает качество сигналов доверия в доступном контенте и не означает, "
@@ -466,6 +469,7 @@ def to_dict(a: ChannelAnalysis) -> dict:
         ],
         "red_flags": a.red_flags,
         "contradictions": a.contradictions,
+        "unverifiable": a.unverifiable,
         "author": a.author,
         "facts": a.facts,
         "claims": a.claims,
