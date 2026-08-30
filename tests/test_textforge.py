@@ -448,6 +448,73 @@ Posts exported: 3
 """
 
 
+class DegenerateInputTest(unittest.TestCase):
+    """Один пост, битые даты, пост только с медиа — не должны ронять конвейер."""
+
+    ONE_POST = """# Exported channel history
+
+Posts exported: 1
+
+## Post 1
+**Date:** not-a-date
+**Views:** abc
+
+### Text
+
+Один единственный пост про копирайтинг.
+"""
+
+    MEDIA_ONLY = """# Exported channel history
+
+Posts exported: 2
+
+## Post 1
+**Date:** 2024-05-01 10:00:00
+**Views:** 100
+**Media:** photo
+
+## Post 2
+**Date:** 2024-05-02 10:00:00
+**Views:** 200
+
+### Text
+
+Короткий.
+"""
+
+    def _analyze(self, text):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.md"
+            path.write_text(text, encoding="utf-8")
+            analysis = analyze(load_channel(str(path)))
+            return analysis, render_markdown(analysis), to_dict(analysis)
+
+    def test_single_post_with_broken_date_and_views(self):
+        analysis, md, data = self._analyze(self.ONE_POST)
+        self.assertEqual(len(data["posts"]), 1)
+        self.assertEqual(analysis.trend["label"], "❓ недостаточно данных")
+        self.assertEqual(md.count("━" * 18), 11, "отчёт должен быть полным даже на одном посте")
+        for value in analysis.indices.values():
+            self.assertGreaterEqual(value, 0.0)
+            self.assertLessEqual(value, 100.0)
+
+    def test_media_only_post_does_not_crash(self):
+        analysis, md, data = self._analyze(self.MEDIA_ONLY)
+        self.assertEqual(len(data["posts"]), 2)
+        self.assertEqual(data["posts"][0]["words"], 0)
+        self.assertEqual(data["posts"][0]["category"], "прочее")
+        self.assertEqual(md.count("━" * 18), 11)
+
+    def test_indices_always_in_range(self):
+        for text in (self.ONE_POST, self.MEDIA_ONLY):
+            analysis, _, _ = self._analyze(text)
+            for name, value in analysis.indices.items():
+                self.assertGreaterEqual(value, 0.0, name)
+                self.assertLessEqual(value, 100.0, name)
+
+
 class AudienceSectionTest(unittest.TestCase):
     """Промт требует 3-5 групп «кому стоит читать» и отдельное «кому не подойдёт»."""
 
