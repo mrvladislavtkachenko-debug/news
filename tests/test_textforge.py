@@ -448,6 +448,43 @@ Posts exported: 3
 """
 
 
+class VerdictSectionTest(unittest.TestCase):
+    """Промт: 3-5 предложений и четыре обязательных ответа в блоке «ВЕРДИКТ»."""
+
+    @classmethod
+    def setUpClass(cls):
+        import re
+
+        cls.analysis = analyze(load_channel(str(SAMPLE)))
+        cls.md = render_markdown(cls.analysis)
+        section = cls.md.split("⭐ **ВЕРДИКТ**", 1)[1]
+        # итоговая строка с меткой вердикта предложением не считается
+        cls.body = re.sub(r"\*\*[🟢🟡🟠🔴][^*]*\*\*\s*$", "", section.strip()).strip()
+        cls.sentences = [x for x in re.split(r"(?<=[.!?])\s+", cls.body) if x.strip()]
+
+    def test_between_three_and_five_sentences(self):
+        self.assertGreaterEqual(len(self.sentences), 3, self.sentences)
+        self.assertLessEqual(len(self.sentences), 5, self.sentences)
+
+    def test_answers_whether_to_spend_time(self):
+        self.assertRegex(self.body, r"(?i)тратить время|стоит изучать|пропускать|выборочно")
+
+    def test_answers_what_is_valuable(self):
+        self.assertRegex(self.body, r"(?i)ценно|брать|гайд|разбор")
+
+    def test_answers_what_is_overrated(self):
+        self.assertRegex(self.body, r"(?i)переоценен|осторожност")
+
+    def test_answers_who_benefits(self):
+        self.assertRegex(self.body, r"(?i)полезен|тем, кто|аудитор")
+
+    def test_ends_with_one_of_four_labels(self):
+        self.assertRegex(
+            self.md.split("⭐ **ВЕРДИКТ**", 1)[1],
+            r"\*\*(🟢 СТОИТ ИЗУЧАТЬ|🟡 ЕСТЬ ПОЛЕЗНЫЕ ИДЕИ|🟠 ПОЛЕЗНО, НО ПЕРЕОЦЕНЕНО|🔴 МАЛО ПОЛЕЗНОГО КОНТЕНТА)\*\*",
+        )
+
+
 class TrustSectionTest(unittest.TestCase):
     """Промт требует в блоке «ДОВЕРИЕ» три обязательных пункта."""
 
