@@ -76,7 +76,13 @@ def _score_action(sent: str) -> float:
 
 def _cut(sent: str, limit: int) -> str:
     sent = sent.rstrip(",;: ")
-    return sent if len(sent) <= limit else sent[: limit - 1].rstrip() + "…"
+    if len(sent) <= limit:
+        return sent
+    head = sent[: limit - 1].rstrip()
+    # не рвём слово пополам («ожидаемый резу…»): откатываемся к границе слова
+    if " " in head:
+        head = head.rsplit(" ", 1)[0].rstrip(",;: ")
+    return head + "…"
 
 
 def _pick(sentences_pool: list[str], markers: tuple[str, ...], used: set[int], limit: int = 200) -> str | None:
@@ -116,6 +122,32 @@ def _sentence_with(text: str, markers: tuple[str, ...], fallback: str, max_len: 
     return fallback
 
 
+def _limits_fallback(pa: PostAnalysis) -> str:
+    """Ограничение практики, собранное из фактических атрибутов поста.
+
+    Промт требует указать, для кого это работает, какие нужны ресурсы и почему
+    метод нельзя просто скопировать. Шаблонная фраза этого не даёт, поэтому
+    собираем из того, что реально видно в посте.
+    """
+    parts: list[str] = []
+    if pa.category == "личный опыт" or pa.struct.first_person >= 3:
+        parts.append("это опыт одного автора в одной нише")
+    if not pa.struct.money and not pa.struct.percent:
+        parts.append("цифр и расчётов в посте нет, поэтому эффект на ваших данных может отличаться")
+    if not pa.struct.links:
+        parts.append("ссылок на источники нет — вывод опирается только на слова автора")
+    if pa.struct.words < 150:
+        parts.append("разбор короткий, деталей реализации не приведено")
+    if pa.category == "реклама/продажа":
+        parts.append("пост продаёт продукт автора, поэтому ограничения в нём не раскрыты")
+    if not parts:
+        return (
+            "Ограничение: вывод получен на опыте одного автора в одной нише — "
+            "перед применением нужно проверить на своих данных."
+        )
+    return "Ограничение: " + "; ".join(parts) + "."
+
+
 def _practice_block(index: int, pa: PostAnalysis) -> str:
     title = _clean(strip_emoji(pa.title))[:90]
     pool = _body_sentences(pa)
@@ -146,10 +178,7 @@ def _practice_block(index: int, pa: PostAnalysis) -> str:
             used.add(i)
             limits = _cut(sent, 200)
             break
-    limits = limits or (
-        "Ограничение: вывод получен на опыте одного автора в одной нише — "
-        "перед применением нужно проверить на своих данных."
-    )
+    limits = limits or _limits_fallback(pa)
     return (
         f"**{index}. {title}**\n\n"
         f"{what}\n\n"

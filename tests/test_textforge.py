@@ -448,6 +448,63 @@ Posts exported: 3
 """
 
 
+class ReportHelpersTest(unittest.TestCase):
+    """_cut не рвёт слова, а ограничение практики собирается из данных поста."""
+
+    def test_cut_does_not_break_words(self):
+        from textforge.report import _cut
+
+        sent = "А потом подробно распиши, как ты будешь ее решать: что потребуется от клиента"
+        out = _cut(sent, 60)
+        self.assertTrue(out.endswith("…"), out)
+        self.assertLessEqual(len(out), 60)
+        # последнее слово до многоточия должно быть целым
+        last = out[:-1].rsplit(" ", 1)[-1].rstrip(",;: ")
+        self.assertIn(last, sent.split(), f"слово разорвано: {last!r}")
+
+    def test_cut_keeps_short_text_intact(self):
+        from textforge.report import _cut
+
+        self.assertEqual(_cut("Короткое предложение.", 200), "Короткое предложение.")
+
+    def test_limits_fallback_reflects_post_attributes(self):
+        import tempfile
+
+        from textforge.report import _limits_fallback
+
+        fixture = (
+            "# Exported channel history\n\nPosts exported: 1\n\n## Post 1\n"
+            "**Date:** 2024-05-01 10:00:00\n**Views:** 100\n\n### Text\n\n"
+            "Заголовок\n\nЯ сделал это сам и знаю, что так работает. Просто повторите за мной.\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.md"
+            path.write_text(fixture, encoding="utf-8")
+            pa = analyze(load_channel(str(path))).posts[0]
+
+        text = _limits_fallback(pa)
+        self.assertTrue(text.startswith("Ограничение: "), text)
+        # в посте нет ссылок -> это должно быть отражено
+        self.assertIn("ссылок на источники нет", text)
+
+    def test_limits_fallback_mentions_missing_numbers(self):
+        import tempfile
+
+        from textforge.report import _limits_fallback
+
+        fixture = (
+            "# Exported channel history\n\nPosts exported: 1\n\n## Post 1\n"
+            "**Date:** 2024-05-01 10:00:00\n**Views:** 100\n\n### Text\n\n"
+            "Заголовок\n\nСделай аудит, посчитай конверсию, проверь когорты и повтори через месяц.\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "x.md"
+            path.write_text(fixture, encoding="utf-8")
+            pa = analyze(load_channel(str(path))).posts[0]
+
+        self.assertIn("цифр и расчётов в посте нет", _limits_fallback(pa))
+
+
 class BodySentencesTest(unittest.TestCase):
     """Подзаголовок без точки не должен слипаться со следующим предложением."""
 
