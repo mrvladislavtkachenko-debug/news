@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Составление карт потоков и процессов — семинар</title>
+<style>
+  :root{
+    --bg:#eef1f6;
+    --sheet:#ffffff;
+    --ink:#0f172a;
+    --ink-soft:#475569;
+    --line:#dbe2ec;
+    --accent:#2563eb;
+    --accent-soft:#e8efff;
+    --warn:#f59e0b;
+    --warn-soft:#fff4dc;
+    --ok:#059669;
+    --ok-soft:#e6f6f0;
+    --red:#dc2626;
+    --red-soft:#fdecec;
+    --violet:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter','Segoe UI','Noto Sans',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  #app{height:100%;display:flex;flex-direction:column}
+
+  /* ---------- stage ---------- */
+  .stage-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
+  .stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none}
+  .slide{
+    position:absolute;inset:0;
+    background:var(--sheet);
+    border-radius:18px;
+    box-shadow:0 24px 60px rgba(15,23,42,.16);
+    padding:54px 64px;
+    display:flex;flex-direction:column;
+    opacity:0;visibility:hidden;
+    transition:opacity .22s ease;
+  }
+  .slide.active{opacity:1;visibility:visible}
+  .slide::after{
+    content:'';position:absolute;left:0;right:0;bottom:0;height:6px;
+    border-radius:0 0 18px 18px;
+    background:linear-gradient(90deg,var(--accent),#38bdf8);
+  }
+
+  /* ---------- typography ---------- */
+  .kicker{
+    font-size:15px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:700;margin-bottom:14px;
+  }
+  h1{font-size:62px;line-height:1.06;margin:0 0 18px;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:40px;line-height:1.14;margin:0 0 6px;letter-spacing:-.015em;font-weight:800}
+  .sub{font-size:21px;line-height:1.45;color:var(--ink-soft);margin:0 0 26px;max-width:1040px}
+  h3{font-size:19px;margin:0 0 8px;font-weight:750}
+  p{margin:0 0 10px}
+  .grow{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+  .footnote{font-size:15px;color:#64748b;margin-top:14px;line-height:1.4}
+  .mono{font-family:'JetBrains Mono','Consolas',ui-monospace,monospace}
+  .hl{background:linear-gradient(transparent 62%,var(--warn-soft) 62%);padding:0 2px}
+  .num{color:var(--accent);font-weight:800}
+
+  /* ---------- cards ---------- */
+  .cards{display:grid;gap:18px}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .c2{grid-template-columns:repeat(2,1fr)}
+  .c4{grid-template-columns:repeat(4,1fr)}
+  .card{
+    background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  }
+  .card.accent{background:var(--accent-soft);border-color:#c7d9ff}
+  .card.warn{background:var(--warn-soft);border-color:#f6dfae}
+  .card.ok{background:var(--ok-soft);border-color:#bfe8d8}
+  .card.red{background:var(--red-soft);border-color:#f6cfcf}
+  .card p{font-size:17px;line-height:1.42;color:var(--ink-soft);margin:0}
+  .card p strong{color:var(--ink)}
+  .badge{
+    display:inline-block;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:4px 10px;margin-bottom:10px;
+  }
+  .badge.w{color:#b45309;background:var(--warn-soft)}
+  .badge.r{color:#b91c1c;background:var(--red-soft)}
+  .badge.g{color:#047857;background:var(--ok-soft)}
+
+  /* ---------- lists / steps ---------- */
+  ol.steps,ul.ul{margin:0;padding-left:0;list-style:none}
+  ol.steps{counter-reset:st;display:grid;gap:11px}
+  ol.steps li{
+    counter-increment:st;display:flex;gap:14px;align-items:flex-start;
+    font-size:18px;line-height:1.36;color:var(--ink-soft);
+  }
+  ol.steps li::before{
+    content:counter(st);flex:none;width:30px;height:30px;border-radius:9px;
+    background:var(--accent);color:#fff;font-weight:800;font-size:16px;
+    display:flex;align-items:center;justify-content:center;margin-top:1px;
+  }
+  ol.steps li b{color:var(--ink)}
+  ul.ul li{font-size:18px;line-height:1.38;color:var(--ink-soft);padding-left:22px;position:relative;margin-bottom:8px}
+  ul.ul li::before{content:'';position:absolute;left:4px;top:.62em;width:8px;height:8px;border-radius:3px;background:var(--accent)}
+  ul.ul.tick li::before{background:none;content:'✓';left:0;top:0;font-weight:800;color:var(--ok);font-size:18px}
+
+  /* ---------- table ---------- */
+  table{width:100%;border-collapse:collapse;font-size:17px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:2px solid var(--line)}
+  td{color:var(--ink-soft);line-height:1.36}
+  td b{color:var(--ink)}
+  tr:last-child td{border-bottom:none}
+
+  /* ---------- formulas ---------- */
+  .formula{
+    background:#f8fafc;border:1px solid var(--line);border-left:5px solid var(--accent);
+    border-radius:10px;padding:14px 18px;font-size:20px;margin:0 0 12px;
+  }
+  .formula .r{color:var(--ink-soft);font-size:15px;margin-top:6px}
+  .formula b{color:var(--ink)}
+  .bigstat{font-size:56px;font-weight:800;line-height:1;letter-spacing:-.02em;color:var(--accent)}
+
+  /* ---------- notes ---------- */
+  .notes{display:none}
+  #notesPanel{
+    display:none;border-top:1px solid var(--line);background:#fff;padding:14px 22px;
+    font-size:16px;line-height:1.5;color:var(--ink-soft);max-height:26vh;overflow:auto;flex:none;
+  }
+  #notesPanel b{color:var(--ink)}
+  #app.notes #notesPanel{display:block}
+  #app.notes .stage-wrap{overflow:auto}
+
+  /* ---------- hud ---------- */
+  .hud{
+    flex:none;display:flex;align-items:center;gap:12px;padding:10px 18px;
+    background:#0f172a;color:#e2e8f0;font-size:14px;
+  }
+  .hud .count{font-variant-numeric:tabular-nums;color:#94a3b8;min-width:112px}
+  .hud button{
+    background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:8px;
+    padding:6px 11px;font-size:14px;cursor:pointer;font-family:inherit;
+  }
+  .hud button:hover{background:#334155;border-color:#475569}
+  .hud .title{color:#94a3b8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1}
+
+  /* ---------- overview ---------- */
+  #overview{display:none;flex:1;overflow:auto;padding:24px}
+  #app.overview #overview{display:block}
+  #app.overview .stage-wrap{display:none}
+  .ovgrid{display:grid;grid-template-columns:repeat(auto-fill,268px);gap:18px}
+  .thumb{
+    position:relative;width:268px;height:151px;overflow:hidden;border-radius:10px;
+    border:3px solid transparent;background:#fff;cursor:pointer;
+    box-shadow:0 4px 14px rgba(15,23,42,.14);
+  }
+  .thumb:hover{border-color:#94a3b8}
+  .thumb.current{border-color:var(--accent)}
+  .thumb .slide{box-shadow:none;border-radius:0;opacity:1 !important;visibility:visible !important;
+    transform:scale(.2094);transform-origin:top left}
+  .thumb .n{
+    position:absolute;left:6px;top:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:800;
+    border-radius:6px;padding:2px 7px;z-index:5;
+  }
+
+  /* ---------- print ---------- */
+  @media print{
+    html,body{background:#fff;overflow:visible;height:auto}
+    .hud,#notesPanel{display:none !important}
+    .stage-wrap{display:block;overflow:visible;height:auto}
+    .stage{transform:none !important;width:auto;height:auto;display:block}
+    .slide{
+      position:relative;inset:auto;opacity:1 !important;visibility:visible !important;
+      box-shadow:none;border-radius:0;page-break-after:always;break-after:page;
+      border-bottom:1px solid #ccc;
+    }
+    .slide:last-child{page-break-after:auto}
+    @page{size:338mm 190mm;margin:0}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+
+      <!-- ============ 1. ТИТУЛ ============ -->
+      <section class="slide active" data-title="Титул">
+        <div class="grow">
+          <div class="kicker">Методические указания · семинар</div>
+          <h1>Составление карт<br>потоков и процессов</h1>
+          <p class="sub" style="font-size:24px;max-width:900px">
+            От наблюдаемого процесса — к карте текущего состояния, расчёту потерь
+            и проектированию карты будущего состояния
+          </p>
+          <div class="cards c3" style="max-width:980px">
+            <div class="card accent">
+              <div class="badge">Инструмент</div>
+              <p><strong>Карта потока создания ценности (VSM)</strong> — поток «сырьё → клиент» на одном листе A3</p>
+            </div>
+            <div class="card">
+              <div class="badge w">Данные</div>
+              <p>Замеры на гемба: такт, время цикла, переналадка, запасы, браки</p>
+            </div>
+            <div class="card">
+              <div class="badge g">Результат</div>
+              <p>Метрики потока, «вспышки кайдзен» и план улучшений с владельцами</p>
+            </div>
+          </div>
+        </div>
+        <div class="footnote">
+          Ход семинара: зачем карта → понятия и уровни → легенда → данные и метрики → алгоритм построения →
+          потери → будущее состояние → типовые ошибки → практика → выводы
+        </div>
+        <div class="notes">
+          <b>Тайминг (45–60 мин):</b> теория и разбор — 20 мин, практика в группах — 25 мин, защита карт — 10 мин, выводы — 5 мин.<br>
+          <b>Раздатка:</b> лист A3 (или 2×A4), маркеры, стикеры, секундомер, распечатка легенды VSM.<br>
+          <b>Ключевая мысль:</b> карта — это не отчёт «для галочки», а инструмент диалога: она делает потери видимыми и
+          превращает разговор о мнениях в разговор о фактах.
+        </div>
+      </section>
+
+      <!-- ============ 2. ЗАЧЕМ ============ -->
+      <section class="slide" data-title="Зачем картографировать поток">
+        <div class="kicker">Слайд 2 · Постановка задачи</div>
+        <h2>Процесс «не видно», потому что он ничей целиком</h2>
+        <p class="sub">
+          Каждый участок оптимизирует себя: загрузка оборудования растёт, а заказ клиенту всё так же идёт неделями.
+          Карта собирает разорванный процесс в одну картинку и показывает, где именно теряются время и деньги.
+        </p>
+        <div class="cards c4" style="margin-bottom:22px">
+          <div class="card accent" style="text-align:center">
+            <div class="bigstat">1–5 %</div>
+            <p style="margin-top:8px">доля времени, в течение которого с продуктом действительно происходит
+              <strong>полезная работа</strong> (типичное значение для дискретного производства)</p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--warn)">95 %</div>
+            <p style="margin-top:8px">всё остальное время заказ <strong>лежит в ожидании</strong> — в очередях, запасах и согласованиях</p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--violet)">7 + 1</div>
+            <p style="margin-top:8px">видов потерь, которые нужно научиться <strong>узнавать на карте</strong></p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--ok)">2</div>
+            <p style="margin-top:8px">карты всегда: <strong>текущее состояние</strong> (факт) и
+              <strong>будущее состояние</strong> (цель на 3–6 месяцев)</p>
+          </div>
+        </div>
+        <div class="cards c3">
+          <div class="card"><h3>Прозрачность</h3><p>Сквозной взгляд на поток: от поставщика до клиента, с цифрами, а не с мнениями</p></div>
+          <div class="card"><h3>Общий язык</h3><p>Один лист обсуждают рабочий, мастер, технолог и директор — спор переходит в факты</p></div>
+          <div class="card"><h3>Управляемые улучшения</h3><p>Кайдзен-мероприятия привязаны к метрикам потока, а не к «нравится / не нравится»</p></div>
+        </div>
+        <div class="notes">
+          <b>Как подать:</b> задайте аудитории вопрос «сколько времени изделие реально обрабатывается и сколько лежит?» —
+          обычно ответы расходятся в разы, и это отличный вход в тему.<br>
+          <b>Акцент:</b> локальная оптимизация участка почти всегда увеличивает запасы и время протекания.
+          Карта — единственный способ увидеть систему целиком.
+        </div>
+      </section>
+
+      <!-- ============ 3. ПОНЯТИЯ ============ -->
+      <section class="slide" data-title="Базовые понятия">
+        <div class="kicker">Слайд 3 · Базовый аппарат</div>
+        <h2>Четыре опорных понятия</h2>
+        <p class="sub">Пять принципов бережливого производства (Вумек, Джонс): ценность → поток создания ценности →
+          непрерывный поток → вытягивание → совершенство.</p>
+        <div class="cards c2" style="flex:1">
+          <div class="card accent">
+            <div class="badge">1</div><h3>Ценность</h3>
+            <p>То, за что клиент готов платить: <b>преобразование</b> изделия, или его <b>перемещение</b>, или <b>ожидание</b>,
+              за которое клиент платит осознанно. Всё, что не попадает в эти три категории, — кандидат на исключение.</p>
+          </div>
+          <div class="card">
+            <div class="badge">2</div><h3>Поток создания ценности</h3>
+            <p>Полный набор действий от заявки клиента до поставки. Внутри три типа работ:
+              <b>создающие ценность</b> (нужно оставить), <b>не создающие, но необходимые</b> (пока нельзя убрать),
+              <b>потери</b> (убирать сразу).</p>
+          </div>
+          <div class="card">
+            <div class="badge">3</div><h3>Непрерывный поток и такт</h3>
+            <p>Такт — «сердцебиение» потока: с какой периодичностью клиент забирает одно изделие.
+              Непрерывный поток — движение изделия по одной штуке без остановок и очередей между операциями.</p>
+          </div>
+          <div class="card">
+            <div class="badge">4</div><h3>Вытягивание</h3>
+            <p>Следующий процесс забирает у предыдущего ровно столько и тогда, сколько и когда ему нужно.
+              Альтернатива — <b>проталкивание</b> (push), которое и порождает перепроизводство и запасы.</p>
+          </div>
+        </div>
+        <div class="footnote">Определение ценности всегда идёт глазами внешнего клиента — не глазами цеха или отдела.</div>
+        <div class="notes">
+          <b>Частая ошибка на семинаре:</b> студенты называют ценностью «работу станка». Напомните: если клиент не платит
+          за эту операцию в явном виде — ценности она не создаёт (классический пример: контроль, который не нужен,
+          и двойная упаковка).<br>
+          <b>Мини-упражнение:</b> возьмите любой учебный процесс (оформление зачёта, выдача справки) и разделите шаги на три типа работ.
+        </div>
+      </section>
+
+      <!-- ============ 4. УРОВНИ ============ -->
+      <section class="slide" data-title="Уровни карт">
+        <div class="kicker">Слайд 4 · Масштаб рассмотрения</div>
+        <h2>Три уровня карт: от потока до рабочего места</h2>
+        <p class="sub">Ошибка № 1 новичка — строить слишком детальную карту. Сначала весь поток целиком, детализация — только там, где найдена потеря.</p>
+        <table style="flex:none">
+          <thead>
+            <tr><th style="width:110px">Уровень</th><th style="width:280px">Объект</th><th style="width:330px">Инструмент</th><th>Главный вопрос</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Макро</b></td>
+              <td>Весь поток: поставщик → цеха → клиент. Семейство продуктов, а не конкретный заказ</td>
+              <td><b>Карта потока создания ценности (VSM)</b></td>
+              <td>Где теряются время и запасы? Каков такт и время протекания?</td>
+            </tr>
+            <tr>
+              <td><b>Мезо</b></td>
+              <td>Один процесс из 5–15 шагов, 2–5 исполнителей/ролей</td>
+              <td><b>Карта процесса</b>, кросс-функциональная диаграмма (swimlane), BPMN/IDEF0</td>
+              <td>Кто и в каком порядке передаёт работу? Где петли возврата?</td>
+            </tr>
+            <tr>
+              <td><b>Микро</b></td>
+              <td>Одна операция, рабочее место, один станок</td>
+              <td><b>Карта стандартной работы</b>, диаграмма «человек–машина», спагетти-диаграмма перемещений</td>
+              <td>Какие движения и ожидания внутри самой операции?</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="card warn" style="margin-top:22px">
+          <p><strong>Правило «воронки»:</strong> спускайтесь на уровень ниже только там, где карта верхнего уровня показала потерю.
+            Детальная проработка «здорового» участка не даёт улучшений — только тратит время команды.</p>
+        </div>
+        <div class="notes">
+          <b>Поясните связь инструментов:</b> VSM отвечает на вопрос «где теряем?» и задаёт приоритеты;
+          карта процесса — «как устроена передача работы?»; спагетти-диаграмма — «почему оператор ходит 400 метров за смену?»<br>
+          <b>Типичный сценарий:</b> VSM показала 4 дня ожидания между участками → спускаемся на мезо-уровень процесса передачи
+          → видим согласование в трёх инстанциях → упрощаем до одного согласования.
+        </div>
+      </section>
+
+      <!-- ============ 5. ЛЕГЕНДА ============ -->
+      <section class="slide" data-title="Легенда карты потока">
+        <div class="kicker">Слайд 5 · Язык карты</div>
+        <h2>Легенда VSM: 12 знаков, которые читаются без слов</h2>
+        <p class="sub" style="margin-bottom:14px">Карта рисуется <b>от руки</b> маркером на A3/A1 — важно содержание, а не графика.</p>
+        <div class="cards c4" style="gap:12px 14px">
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58" aria-hidden="true">
+              <rect x="8" y="26" width="110" height="40" rx="4" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <line x1="8" y1="46" x2="118" y2="46" stroke="#cbd5e1" stroke-width="2"/>
+              <text x="63" y="41" font-size="11" text-anchor="middle" fill="#334155" font-family="Arial">Процесс</text>
+              <text x="39" y="60" font-size="9" fill="#64748b" font-family="Arial">C/T 45 с</text>
+              <text x="90" y="60" font-size="9" fill="#64748b" font-family="Arial">C/O 12 мин</text>
+              <rect x="126" y="30" width="66" height="34" rx="3" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+              <path d="M126 30 l8 -8 h50 l8 8 z" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+              <text x="159" y="52" font-size="10" text-anchor="middle" fill="#92400e" font-family="Arial">Клиент</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Рамка процесса</b><br>данные по операции</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <path d="M40 58 L68 16 L96 58 Z" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <text x="68" y="46" font-size="10" text-anchor="middle" fill="#334155" font-family="Arial">I</text>
+              <text x="68" y="70" font-size="9" text-anchor="middle" fill="#64748b" font-family="Arial">320 шт</text>
+              <rect x="118" y="26" width="60" height="34" rx="8" fill="#e8efff" stroke="#2563eb" stroke-width="2"/>
+              <line x1="126" y1="36" x2="170" y2="36" stroke="#2563eb" stroke-width="2"/>
+              <line x1="126" y1="45" x2="170" y2="45" stroke="#2563eb" stroke-width="2"/>
+              <text x="148" y="70" font-size="9" text-anchor="middle" fill="#64748b" font-family="Arial">Супермаркет</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Запасы</b> и <b>супермаркет</b><br>управляемый запас</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <rect x="16" y="26" width="86" height="26" rx="13" fill="#e6f6f0" stroke="#059669" stroke-width="2"/>
+              <text x="59" y="44" font-size="11" text-anchor="middle" fill="#047857" font-family="Arial">FIFO</text>
+              <path d="M28 38 h56" stroke="#059669" stroke-width="2" marker-end="url(#ar)"/>
+              <path d="M84 38 l-6 -4 v8 z" fill="#059669"/>
+              <text x="130" y="44" font-size="10" text-anchor="middle" fill="#64748b" font-family="Arial">max 20</text>
+              <rect x="106" y="26" width="10" height="26" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <rect x="166" y="26" width="10" height="26" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <line x1="116" y1="39" x2="166" y2="39" stroke="#334155" stroke-width="2"/>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Полка FIFO</b><br>жёсткий лимит запаса</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <rect x="20" y="24" width="46" height="32" rx="4" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <rect x="28" y="31" width="30" height="2" fill="#94a3b8"/>
+              <rect x="28" y="37" width="30" height="2" fill="#94a3b8"/>
+              <rect x="28" y="43" width="20" height="2" fill="#94a3b8"/>
+              <text x="43" y="70" font-size="9" text-anchor="middle" fill="#64748b" font-family="Arial">Канбан</text>
+              <path d="M80 40 h100" stroke="#7c3aed" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+              <circle cx="142" cy="40" r="3" fill="#7c3aed"/>
+              <text x="130" y="30" font-size="9" fill="#7c3aed" font-family="Arial">информация</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Канбан</b> и <b>информационный поток</b></p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <path d="M26 40 h140" stroke="#dc2626" stroke-width="2" marker-end="url(#ar)"/>
+              <rect x="46" y="28" width="12" height="12" fill="#fecaca" stroke="#dc2626" stroke-width="1.5"/>
+              <rect x="66" y="28" width="12" height="12" fill="#fecaca" stroke="#dc2626" stroke-width="1.5"/>
+              <rect x="86" y="28" width="12" height="12" fill="#fecaca" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="96" y="66" font-size="9" text-anchor="middle" fill="#b91c1c" font-family="Arial">проталкивание (push)</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Проталкивание</b><br>источник запасов</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <path d="M18 40 C34 26 50 54 66 40 C82 26 98 54 114 40 C130 26 146 54 162 40" fill="none" stroke="#7c3aed" stroke-width="2"/>
+              <text x="90" y="66" font-size="9" text-anchor="middle" fill="#7c3aed" font-family="Arial">электронный поток</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Электронный</b><br>информационный поток</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <path d="M70 12 l6 14 15 2 -11 11 3 15 -13 -8 -13 8 3 -15 -11 -11 15 -2 z" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+              <text x="70" y="46" font-size="11" text-anchor="middle" fill="#92400e" font-family="Arial">改善</text>
+              <text x="70" y="66" font-size="9" text-anchor="middle" fill="#b45309" font-family="Arial">вспышка кайдзен</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>«Вспышка кайдзен»</b><br>место приоритетного улучшения</p>
+          </div>
+          <div class="card" style="padding:10px 12px;text-align:center">
+            <svg viewBox="0 0 200 74" width="100%" height="58">
+              <path d="M14 62 L14 50 L44 50 L44 38 L84 38 L84 26 L124 26 L124 14 L186 14 L186 62 Z" fill="#e8efff" stroke="#2563eb" stroke-width="2"/>
+              <text x="100" y="72" font-size="9" text-anchor="middle" fill="#64748b" font-family="Arial">временная шкала</text>
+            </svg>
+            <p style="font-size:15px;margin-top:2px"><b>Временная шкала</b><br>работа vs ожидание</p>
+          </div>
+        </div>
+        <svg width="0" height="0" style="position:absolute"><defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" fill="context-stroke"/>
+          </marker>
+        </defs></svg>
+        <div class="notes">
+          <b>Раздайте легенду на печатном листе</b> — на семинаре экономит 10 минут объяснений.<br>
+          <b>Подчеркните:</b> карту рисуют маркером, а не в Visio. Рукотворность = готовность править карту прямо при обсуждении;
+          «красивая» электронная схема парализует изменения. ПО (draw.io, Miro, Visio) уместно только для финальной фиксации.<br>
+          <b>marker-end с fill="context-stroke"</b> поддерживается не везде — в старых браузерах стрелки могут не отрисоваться, это не критично.
+        </div>
+      </section>
+
+      <!-- ============ 6. ДАННЫЕ ============ -->
+      <section class="slide" data-title="Данные собирают на гемба">
+        <div class="kicker">Слайд 6 · Сбор данных</div>
+        <h2>Данные собирают там, где работает процесс</h2>
+        <p class="sub">Карта строится на замерах, а не на нормативах и памяти. Идите по потоку, а не по отчётам.</p>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:stretch">
+          <div>
+            <table>
+              <thead><tr><th style="width:36%">Параметр</th><th>Что именно фиксируем</th></tr></thead>
+              <tbody>
+                <tr><td><b>Спрос клиента</b></td><td>шт/сутки (месяц), колебания спроса, пики</td></tr>
+                <tr><td><b>Доступное время</b></td><td>сменность, длительность, перерывы, план. простои</td></tr>
+                <tr><td><b>C/T — время цикла</b></td><td>от выхода предыдущего изделия до следующего; <b>5–10 замеров</b>, а не одно</td></tr>
+                <tr><td><b>C/O — переналадка</b></td><td>время перехода с изделия на изделие, частота</td></tr>
+                <tr><td><b>Доступность</b></td><td>простои, поломки, % готовности оборудования</td></tr>
+                <tr><td><b>Брак и переделки</b></td><td>доля брака на операции и по потоку в целом</td></tr>
+                <tr><td><b>Запасы</b></td><td>шт и дни запаса между операциями, оборачиваемость</td></tr>
+                <tr><td><b>Люди и передача</b></td><td>операторы, смены, способы и дальность транспортировки</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="card accent">
+              <h3>Порядок обхода</h3>
+              <p><b>1.</b> Материал — по ходу потока (влево направо).<br>
+                 <b>2.</b> Информация — <b>против</b> хода потока (справа налево): кто и как командует производством.<br>
+                 <b>3.</b> Черновик — сразу на бумаге, вопросы — на стикерах.</p>
+            </div>
+            <div class="card warn">
+              <h3>Три запрета</h3>
+              <p>✗ брать данные из нормативов «как должно быть»;<br>
+                 ✗ усреднять по разным изделиям и сменам;<br>
+                 ✗ спрашивать мастера «сколько длится?» вместо замера.</p>
+            </div>
+            <div class="card ok">
+              <h3>Что взять с собой</h3>
+              <p>A3/A1, маркеры 3 цветов, стикеры, секундомер, рулетку, карандаш, бланк рамки данных, фотоаппарат
+                (с разрешения руководства участка).</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Инсайт для аудитории:</b> если вы проходите поток дважды и получаете разные цифры — вы измерили разброс,
+          а не ошиблись. Разброс C/T — уже готовая «вспышка кайдзен».<br>
+          <b>Практический приём:</b> на семинаре дайте группам роли: хронометрист, картограф, «адвокат клиента», докладчик.
+          Меняйте роли через 15 минут.
+        </div>
+      </section>
+
+      <!-- ============ 7. МЕТРИКИ ============ -->
+      <section class="slide" data-title="Метрики и расчёт">
+        <div class="kicker">Слайд 7 · Расчёт</div>
+        <h2>Пять расчётов, которые превращают картинку в диагноз</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div>
+            <div class="formula">
+              <b>Такт</b> = Доступное время ÷ Спрос клиента<br>
+              <span class="r">420 мин × 60 ÷ 1400 шт = <b>18 с/шт</b> — как часто клиент забирает одно изделие</span>
+            </div>
+            <div class="formula">
+              <b>Время протекания (Lead time)</b> = Σ (запас × такт) по участкам<br>
+              <span class="r">обратная форма закона Литтла: <span class="mono">WIP = LT × производительность</span></span>
+            </div>
+            <div class="formula">
+              <b>Эффективность потока (PCE)</b> = Σ Время создания ценности ÷ Время протекания × 100 %<br>
+              <span class="r">Σ C/T = 168 с = 2,8 мин; LT = 12 дней × 8 ч = 5760 мин ⇒ <b>PCE = 0,05 %</b></span>
+            </div>
+          </div>
+          <div>
+            <div class="formula" style="border-left-color:var(--warn)">
+              <b>Балансировка:</b> сравниваем C/T каждой операции с тактом<br>
+              <span class="r">C/T &gt; такт → <b>узкое место</b> (очередь перед операцией); C/T &lt;&lt; такт → потенциал перепроизводства</span>
+            </div>
+            <div class="formula" style="border-left-color:var(--violet)">
+              <b>Сквозная производительность</b> = мин(доступность, пропускная способность узкого места)<br>
+              <span class="r">улучшение не узкого места <b>не</b> увеличивает выпуск — только запасы</span>
+            </div>
+            <div class="card red" style="margin-top:16px">
+              <p><strong>Проверка на здравый смысл:</strong> если PCE получился больше 25 % — скорее всего, в расчёт
+                не попали запасы между операциями. Типичные значения для дискретного производства: <b>0,5–5 %</b>.</p>
+            </div>
+          </div>
+        </div>
+        <div class="footnote">Такт задаёт ритм; запасы и ожидания задают длительность; PCE показывает долю полезной работы в этом времени.</div>
+        <div class="notes">
+          <b>Разберите пример устно:</b> такт 18 с, а самая долгая операция 21 с — значит поток не способен выполнить план:
+          либо переналадка, либо перераспределение элементов работы.<br>
+          <b>Ловушка:</b> «эффективность станка 92 %» ≠ эффективность потока 92 %. Загрузка оборудования создаёт запасы,
+          если не согласована с тактом.
+        </div>
+      </section>
+
+      <!-- ============ 8. АЛГОРИТМ ============ -->
+      <section class="slide" data-title="Алгоритм построения">
+        <div class="kicker">Слайд 8 · Методика</div>
+        <h2>Алгоритм построения карты текущего состояния</h2>
+        <p class="sub" style="margin-bottom:18px">Восемь шагов — от выбора границ потока до приоритизации потерь.</p>
+        <ol class="steps">
+          <li><span><b>Выберите семейство продуктов.</b> Группа изделий с общим маршрутом и близкой трудоёмкостью — один поток, одна карта.</span></li>
+          <li><span><b>Задайте границы:</b> от входа материалов (поставщика) до отгрузки клиенту. Ни одного «и так далее».</span></li>
+          <li><span><b>Пройдите гемба по ходу материала</b> и нарисуйте черновик процессов, стрелок и запасов — карандашом, сразу на месте.</span></li>
+          <li><span><b>Заполните рамку данных</b> по каждой операции: C/T, C/O, доступность, брак, операторы, сменность.</span></li>
+          <li><span><b>Нанесите информационные потоки и управление:</b> как заказ доходит до начала линии, кто планирует, с какой периодичностью.</span></li>
+          <li><span><b>Добавьте запасы и транспортировку</b> между операциями (треугольники с количеством и днями запаса).</span></li>
+          <li><span><b>Постройте временную шкалу:</b> ступень обработки (C/T) + ступень ожидания (запас × такт).</span></li>
+          <li><span><b>Рассчитайте PCE и отметьте «вспышками кайдзен»</b> места крупнейших потерь — это и есть повестка улучшений.</span></li>
+        </ol>
+        <div class="card ok" style="margin-top:16px">
+          <p><strong>Карта готова, когда:</strong> один поток на одном листе · все числа подтверждены замером ·
+            есть временная шкала и PCE · карту может прочитать человек, который не участвовал в её создании.</p>
+        </div>
+        <div class="notes">
+          <b>Тайминг построения:</b> обход и черновик — 60–90 мин, уточнение данных — 30 мин, чистовой лист A3 — 30 мин.
+          На семинаре это сжимается до 25–40 мин за счёт готового кейса.<br>
+          <b>Частая проблема:</b> команда начинает с операций, а не с клиента. Начинайте всегда справа — со спроса и такта:
+          это сразу задаёт масштаб «много / мало».
+        </div>
+      </section>
+
+      <!-- ============ 9. ПОТЕРИ ============ -->
+      <section class="slide" data-title="Потери и временная шкала">
+        <div class="kicker">Слайд 9 · Диагностика</div>
+        <h2>Семь (плюс одна) потерь — и где они видны на карте</h2>
+        <div class="cards c4" style="gap:10px;margin-bottom:16px">
+          <div class="card red" style="padding:12px 14px"><p style="font-size:16px"><b>Перепроизводство</b><br>делаем раньше и больше, чем забирают — мать всех остальных потерь</p></div>
+          <div class="card red" style="padding:12px 14px"><p style="font-size:16px"><b>Ожидание</b><br>простои людей, станков и деталей между операциями</p></div>
+          <div class="card red" style="padding:12px 14px"><p style="font-size:16px"><b>Транспортировка</b><br>перемещения материалов, не создающие ценности</p></div>
+          <div class="card red" style="padding:12px 14px"><p style="font-size:16px"><b>Лишняя обработка</b><br>операции, за которые клиент не платит</p></div>
+          <div class="card warn" style="padding:12px 14px"><p style="font-size:16px"><b>Запасы</b><br>сырьё, НЗП, готовая продукция сверх необходимого</p></div>
+          <div class="card warn" style="padding:12px 14px"><p style="font-size:16px"><b>Движения</b><br>лишние перемещения и поиск инструмента оператором</p></div>
+          <div class="card warn" style="padding:12px 14px"><p style="font-size:16px"><b>Дефекты</b><br>брак, переделки, рекламации и проверки ради проверок</p></div>
+          <div class="card" style="padding:12px 14px"><p style="font-size:16px"><b>+ Неиспользованный потенциал</b><br>идеи и навыки людей, которые не спрашивают</p></div>
+        </div>
+        <svg viewBox="0 0 1120 176" width="100%" height="150" role="img" aria-label="Временная шкала потока">
+          <path d="M10 150 L10 133 L20 133 L20 116 L212 116 L212 99 L224 99 L224 82 L444 82 L444 65 L455 65 L455 48 L656 48 L656 31 L669 31 L669 14 L880 14 L880 6 L1110 6 L1110 150 Z"
+                fill="#e8efff" stroke="#2563eb" stroke-width="2"/>
+          <text x="15" y="146" font-size="12" fill="#1d4ed8" font-family="Arial">C/T</text>
+          <text x="115" y="132" font-size="12" fill="#64748b" font-family="Arial">ожидание 4,5 дн</text>
+          <text x="318" y="115" font-size="12" fill="#64748b" font-family="Arial">ожидание 3,8 дн</text>
+          <text x="550" y="98" font-size="12" fill="#64748b" font-family="Arial">ожидание 2,6 дн</text>
+          <text x="760" y="81" font-size="12" fill="#64748b" font-family="Arial">ожидание 1,1 дн</text>
+          <text x="985" y="30" font-size="12" fill="#64748b" font-family="Arial">до отгрузки</text>
+          <line x1="10" y1="166" x2="1110" y2="166" stroke="#475569" stroke-width="2"/>
+          <text x="560" y="176" font-size="13" text-anchor="middle" fill="#0f172a" font-family="Arial">Время протекания (Lead time) = 12 дней</text>
+          <g>
+            <rect x="880" y="52" width="230" height="26" rx="6" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/>
+            <text x="995" y="70" font-size="12" text-anchor="middle" fill="#92400e" font-family="Arial">Σ полезной работы = 2,8 мин ⇒ PCE = 0,05 %</text>
+          </g>
+        </svg>
+        <div class="notes">
+          <b>Как «читать» шкалу:</b> узкие ступени слева — реальная работа; широкие полки — ожидание, то есть деньги,
+          замороженные в запасах.<br>
+          <b>Связь с картой:</b> запас между операциями → потеря «ожидание»; длинная информационная петля планирования →
+          «перепроизводство»; транспорт через весь цех → «транспортировка»; C/T выше такта → узкое место и очередь.
+        </div>
+      </section>
+
+      <!-- ============ 10. БУДУЩЕЕ СОСТОЯНИЕ ============ -->
+      <section class="slide" data-title="Будущее состояние">
+        <div class="kicker">Слайд 10 · Проектирование</div>
+        <h2>Карта будущего состояния: шесть вопросов проектировщику</h2>
+        <p class="sub">Горизонт 3–6 месяцев, та же легенда, тот же поток. Карта будущего — это ответы на вопросы, а не «хотелки».</p>
+        <div class="cards c3" style="gap:14px;flex:1">
+          <div class="card accent"><h3>1. Каков такт?</h3><p>Считается от спроса клиента, а не от мощности оборудования. Он задаёт ритм всему потоку.</p></div>
+          <div class="card"><h3>2. Где непрерывный поток?</h3><p>Какие операции можно объединить так, чтобы изделие шло по одной штуке без промежуточных запасов.</p></div>
+          <div class="card"><h3>3. Где точка вытягивания?</h3><p>Единая точка планирования («питч») на весь поток: от неё вверх по потоку идёт сигнал забора.</p></div>
+          <div class="card"><h3>4. Супермаркет или FIFO?</h3><p>Где поток невозможно замкнуть (переналадка, разный ритм) — управляемый запас с канбаном или полка FIFO с лимитом.</p></div>
+          <div class="card"><h3>5. Как сглаживаем спрос?</h3><p>Хейдзунка: выравнивание объёма и mix-а продукции, чтобы поток не «била лихорадка» заказов.</p></div>
+          <div class="card"><h3>6. Какие кайдзен-мероприятия?</h3><p>Конкретные «вспышки»: сокращение переналадки (SMED), стандартизация работы, качество на месте, ТПМ.</p></div>
+        </div>
+        <div class="card warn" style="margin-top:14px">
+          <p><strong>Обязательное приложение к карте будущего — план кайдзен:</strong>
+            что делаем → кто владелец → срок → ожидаемый эффект в метриках (время протекания, запасы, PCE, брак)
+            → как проверим результат. Без плана карта остаётся плакатом.</p>
+        </div>
+        <div class="notes">
+          <b>Подчеркните:</b> карта будущего состояния рисуется <b>той же легендой</b> и на <b>том же маршруте</b> —
+          иначе её нельзя сравнить с текущей, а сравнение двух листов и есть суть метода.<br>
+          <b>Проверка реалистичности:</b> каждое улучшение должно опираться на известный инструмент
+          (SMED, 5S, стандартная работа, канбан, быстрая переналадка). «Увеличим дисциплину» — не мероприятие.
+        </div>
+      </section>
+
+      <!-- ============ 11. ОШИБКИ ============ -->
+      <section class="slide" data-title="Типичные ошибки и чек-лист">
+        <div class="kicker">Слайд 11 · Контроль качества</div>
+        <h2>Как получаются бесполезные карты</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div class="card red">
+            <div class="badge r">7 типовых ошибок</div>
+            <ul class="ul" style="margin-top:4px">
+              <li>Карта «из кабинета»: без обхода гемба, по документам и рассказам</li>
+              <li>Нормативы вместо замеров: «по норме 30 секунд»</li>
+              <li>Смешение уровней: VSM, в которую вклеены движения оператора</li>
+              <li>Несколько семейств продуктов на одной карте</li>
+              <li>Нет информационных потоков — виден материал, но не управление</li>
+              <li>Нет временной шкалы и расчёта PCE — карта не доказывает потери</li>
+              <li>Нет карты будущего состояния, плана, владельцев и сроков</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <div class="badge g">Чек-лист приёмки карты</div>
+            <ul class="ul tick" style="margin-top:4px">
+              <li>Выбрано одно семейство продуктов, границы потока определены</li>
+              <li>Каждая операция содержит рамку данных, цифры подтверждены замером</li>
+              <li>Запасы указаны в штуках <b>и</b> в днях</li>
+              <li>Информационные потоки нарисованы против хода материала</li>
+              <li>Рассчитаны такт, время протекания, PCE</li>
+              <li>Узкое место определено сравнением C/T с тактом</li>
+              <li>«Вспышки кайдзен» расставлены по крупнейшим потерям</li>
+              <li>Есть карта будущего состояния и план с владельцами</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footnote">Правило защиты: автор карты за 5 минут объясняет её человеку, не участвовавшему в работе. Не объяснил — карта не годится.</div>
+        <div class="notes">
+          <b>Используйте чек-лист как критерий оценки на семинаре</b> — раздайте его группам до начала практики,
+          тогда качество карт вырастет заметно.<br>
+          <b>Хороший приём:</b> обмен картами между группами — каждая команда проверяет чужую карту по чек-листу и ищет ошибки.
+        </div>
+      </section>
+
+      <!-- ============ 12. ПРАКТИКА ============ -->
+      <section class="slide" data-title="Практическое задание">
+        <div class="kicker">Слайд 12 · Практика семинара</div>
+        <h2>Задание: построить карту потока и защитить её</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div class="card accent">
+            <h3>Входные данные</h3>
+            <p>Описание процесса из 8–12 операций: последовательность, C/T, C/O, запасы между операциями,
+              доступность, брак, сменность и спрос клиента (вариант из методических указаний или реальный процесс участников).</p>
+            <h3 style="margin-top:14px">Результат за 40–60 минут</h3>
+            <ul class="ul">
+              <li>Карта текущего состояния на A3</li>
+              <li>Расчёт такта, времени протекания и PCE</li>
+              <li>3–5 «вспышек кайдзен» с обоснованием</li>
+              <li>Карта будущего состояния + план улучшений</li>
+            </ul>
+          </div>
+          <div>
+            <table>
+              <thead><tr><th style="width:34%">Критерий</th><th>Что оцениваем</th></tr></thead>
+              <tbody>
+                <tr><td><b>Полнота данных</b></td><td>все операции имеют рамку данных, запасы — в шт. и днях, источник замеров понятен</td></tr>
+                <tr><td><b>Корректность расчётов</b></td><td>такт, LT и PCE посчитаны верно, узкое место определено по C/T и такту</td></tr>
+                <tr><td><b>Связь выводов с картой</b></td><td>каждая «вспышка кайдзен» опирается на конкретную потерю, видимую на карте</td></tr>
+                <tr><td><b>Реалистичность плана</b></td><td>мероприятия, владельцы, сроки, ожидаемый эффект в метриках</td></tr>
+                <tr><td><b>Защита</b></td><td>5 минут на группу: что увидели, что меняем, какой ожидаемый результат</td></tr>
+              </tbody>
+            </table>
+            <div class="card warn" style="margin-top:14px">
+              <p><strong>Роли в группе:</strong> хронометрист (замеры) · картограф (рисует) · аналитик (расчёты) ·
+                докладчик (защита). Роли меняются через 15 минут.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Организация:</b> группы по 3–4 человека. Если реального процесса нет — используйте учебный кейс
+          «изготовление и отгрузка изделия» или процесс из жизни вуза (заявление в деканат, выдача справки, заселение в общежитие).<br>
+          <b>Материалы:</b> A3, маркеры, стикеры, калькулятор, распечатка легенды, бланк рамки данных, чек-лист приёмки.
+        </div>
+      </section>
+
+      <!-- ============ 13. ВЫВОДЫ ============ -->
+      <section class="slide" data-title="Выводы">
+        <div class="kicker">Слайд 13 · Итоги</div>
+        <h2>Что нужно унести с семинара</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:stretch">
+          <div class="card accent" style="display:flex;flex-direction:column;justify-content:center">
+            <p style="font-size:22px;line-height:1.4">
+              Карта потока — это <b>не отчёт</b>, а инструмент управления изменениями:
+              она переводит спор о мнениях в разговор о фактах и задаёт приоритет улучшений.
+            </p>
+          </div>
+          <div>
+            <ul class="ul" style="font-size:19px">
+              <li>Считаем <b>ценность глазами клиента</b>, а не загрузкой оборудования</li>
+              <li>Данные — только с <b>гемба</b>: замер, а не норматив и не память</li>
+              <li>Сначала <b>видим</b> потери (текущее состояние), потом <b>проектируем</b> поток (будущее состояние)</li>
+              <li>Улучшение вне <b>узкого места</b> увеличивает запасы, а не выпуск</li>
+              <li>Главный риск — аккуратная карта <b>без замеров и без плана</b></li>
+            </ul>
+          </div>
+        </div>
+        <div class="card ok" style="margin-top:16px;text-align:center">
+          <p style="font-size:20px"><strong>Спасибо за внимание!</strong> Вопросы и обсуждение карт —
+            переходим к защите практических работ.</p>
+        </div>
+        <div class="footnote">
+          Литература для подготовки: М. Ротер, Д. Шук «Учитесь видеть бизнес-процессы»; Д. Вумек, Д. Джонс
+          «Бережливое производство»; Т. Оно «Производственная система Тойоты».
+        </div>
+        <div class="notes">
+          <b>Финальный акцент (30 секунд):</b> «Нарисуйте карту своего процесса на этой неделе. Один лист, один поток,
+          честные замеры — и вы уже увидите то, что раньше было невидимым».<br>
+          <b>Домашнее задание (по методическим указаниям):</b> оформить карту текущего и будущего состояния выбранного процесса,
+          приложить расчёты и план кайдзен.
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div id="overview"><div class="ovgrid" id="ovgrid"></div></div>
+
+  <div id="notesPanel"></div>
+
+  <div class="hud">
+    <button id="prev" title="← / ↑ / PageUp">◀ назад</button>
+    <button id="next" title="→ / ↓ / Space / PageDown">вперёд ▶</button>
+    <span class="count" id="count">1 / 13</span>
+    <span class="title" id="crumb">Титул</span>
+    <button id="btnOv" title="O — все слайды">все слайды</button>
+    <button id="btnNotes" title="N — заметки докладчика">заметки</button>
+    <button id="btnFull" title="F — на весь экран">на весь экран</button>
+    <button id="btnPrint" title="Ctrl+P — печать / PDF">печать</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.stage .slide'));
+  var ovgrid = document.getElementById('ovgrid');
+  var notesPanel = document.getElementById('notesPanel');
+  var crumb = document.getElementById('crumb');
+  var countEl = document.getElementById('count');
+  var i = 0;
+
+  /* ---------- масштабирование под экран ---------- */
+  function fit(){
+    if (app.classList.contains('overview')) { stage.style.transform='none'; return; }
+    var wrap = document.querySelector('.stage-wrap');
+    var w = wrap.clientWidth - 48, h = wrap.clientHeight - 40;
+    var s = Math.min(w / 1280, h / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+
+  /* ---------- переходы ---------- */
+  function show(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function(s, k){ s.classList.toggle('active', k === i); });
+    var notes = slides[i].querySelector('.notes');
+    notesPanel.innerHTML = notes ? notes.innerHTML : '<i>Заметок к слайду нет.</i>';
+    crumb.textContent = slides[i].getAttribute('data-title') || '';
+    countEl.textContent = (i + 1) + ' / ' + slides.length;
+    Array.prototype.forEach.call(ovgrid.children, function(t, k){
+      t.classList.toggle('current', k === i);
+    });
+    fit();
+  }
+  function go(n){ app.classList.remove('overview'); show(n); }
+
+  /* ---------- режим «все слайды» ---------- */
+  function buildOverview(){
+    ovgrid.innerHTML = '';
+    slides.forEach(function(s, k){
+      var t = document.createElement('div');
+      t.className = 'thumb';
+      var num = document.createElement('div');
+      num.className = 'n'; num.textContent = k + 1;
+      var clone = s.cloneNode(true);
+      clone.classList.remove('active');
+      t.appendChild(num); t.appendChild(clone);
+      t.addEventListener('click', function(){ go(k); });
+      ovgrid.appendChild(t);
+    });
+  }
+  buildOverview();
+
+  function toggleOverview(){
+    app.classList.toggle('overview');
+    if (app.classList.contains('overview')) {
+      var t = ovgrid.children[i];
+      if (t) t.scrollIntoView({block:'center'});
+    }
+    fit();
+  }
+
+  /* ---------- управление ---------- */
+  document.getElementById('prev').onclick = function(){ go(i - 1); };
+  document.getElementById('next').onclick = function(){ go(i + 1); };
+  document.getElementById('btnOv').onclick = toggleOverview;
+  document.getElementById('btnNotes').onclick = function(){
+    app.classList.toggle('notes'); fit();
+    document.getElementById('btnNotes').style.background =
+      app.classList.contains('notes') ? '#2563eb' : '';
+  };
+  document.getElementById('btnFull').onclick = function(){
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  };
+  document.getElementById('btnPrint').onclick = function(){ window.print(); };
+
+  document.addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === ' ' || k === 'PageDown' || k === 'Enter') { go(i + 1); e.preventDefault(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { go(i - 1); e.preventDefault(); }
+    else if (k === 'Home') { go(0); e.preventDefault(); }
+    else if (k === 'End') { go(slides.length - 1); e.preventDefault(); }
+    else if (k === 'o' || k === 'O' || k === 'Escape') { if (k === 'Escape' && !app.classList.contains('overview')) return; toggleOverview(); }
+    else if (k === 'n' || k === 'N' || k === 'т' || k === 'Т') { document.getElementById('btnNotes').click(); }
+    else if (k === 'f' || k === 'F' || k === 'а' || k === 'А') { document.getElementById('btnFull').click(); }
+    else if (k === 'p' || k === 'P' || k === 'з' || k === 'З') { window.print(); }
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>
