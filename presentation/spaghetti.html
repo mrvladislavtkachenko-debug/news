@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диаграмма спагетти. Семинар</title>
+<style>
+  :root{
+    --bg:#e9edf4; --sheet:#fff; --ink:#0f172a; --ink-soft:#475569; --line:#dbe2ec;
+    --accent:#2563eb; --accent-soft:#e8efff; --warn:#f59e0b; --warn-soft:#fff4dc;
+    --ok:#059669; --ok-soft:#e6f6f0; --red:#dc2626; --red-soft:#fdecec; --violet:#7c3aed; --violet-soft:#f5f3ff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--ink);
+    font-family:'Segoe UI','Noto Sans','DejaVu Sans',system-ui,-apple-system,'Helvetica Neue',Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  #app{height:100%;display:flex;flex-direction:column}
+
+  .stage-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
+  .stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none}
+  .slide{position:absolute;inset:0;background:var(--sheet);border-radius:16px;
+    box-shadow:0 24px 60px rgba(15,23,42,.16);padding:46px 60px;
+    display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .2s ease}
+  .slide.active{opacity:1;visibility:visible}
+  .slide.tight{padding:34px 52px}
+  .slide::after{content:'';position:absolute;left:0;right:0;bottom:0;height:6px;border-radius:0 0 16px 16px;
+    background:linear-gradient(90deg,var(--accent),#38bdf8)}
+
+  .kicker{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:8px}
+  h1{font-size:58px;line-height:1.06;margin:0 0 16px;letter-spacing:-.02em;font-weight:800}
+  h2{font-size:36px;line-height:1.14;margin:0 0 4px;letter-spacing:-.015em;font-weight:800}
+  .sub{font-size:19px;line-height:1.42;color:var(--ink-soft);margin:6px 0 16px;max-width:1080px}
+  h3{font-size:18px;margin:0 0 6px;font-weight:750}
+  p{margin:0 0 9px}
+  .grow{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center}
+  .footnote{font-size:14px;color:#64748b;margin-top:12px;line-height:1.4}
+  svg{display:block}
+
+  .cards{display:grid;gap:16px}
+  .c3{grid-template-columns:repeat(3,1fr)} .c2{grid-template-columns:repeat(2,1fr)} .c4{grid-template-columns:repeat(4,1fr)}
+  .card{background:#f8fafc;border:1px solid var(--line);border-radius:13px;padding:16px 18px}
+  .card.accent{background:var(--accent-soft);border-color:#c7d9ff}
+  .card.warn{background:var(--warn-soft);border-color:#f6dfae}
+  .card.ok{background:var(--ok-soft);border-color:#bfe8d8}
+  .card.red{background:var(--red-soft);border-color:#f6cfcf}
+  .card.violet{background:var(--violet-soft);border-color:#ddd6fe}
+  .card p{font-size:16px;line-height:1.4;color:var(--ink-soft);margin:0}
+  .card p strong,.card p b{color:var(--ink)}
+  .badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:4px 9px;margin-bottom:8px}
+  .badge.w{color:#b45309;background:var(--warn-soft)}
+  .badge.r{color:#b91c1c;background:var(--red-soft)}
+  .badge.g{color:#047857;background:var(--ok-soft)}
+
+  ol.steps,ul.ul{margin:0;padding-left:0;list-style:none}
+  ol.steps{counter-reset:st;display:grid;gap:9px}
+  ol.steps li{counter-increment:st;display:flex;gap:12px;align-items:flex-start;font-size:17px;line-height:1.34;color:var(--ink-soft)}
+  ol.steps li::before{content:counter(st);flex:none;width:28px;height:28px;border-radius:8px;background:var(--accent);
+    color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  ol.steps li b{color:var(--ink)}
+  ul.ul li{font-size:17px;line-height:1.34;color:var(--ink-soft);padding-left:20px;position:relative;margin-bottom:7px}
+  ul.ul li::before{content:'';position:absolute;left:3px;top:.6em;width:7px;height:7px;border-radius:2px;background:var(--accent)}
+  ul.ul.plain li::before{background:#cbd5e1}
+
+  table{width:100%;border-collapse:collapse;font-size:16px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:2px solid var(--line)}
+  td{color:var(--ink-soft);line-height:1.34}
+  td b{color:var(--ink)}
+  tr:last-child td{border-bottom:none}
+
+  .formula{background:#f8fafc;border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:9px;
+    padding:12px 16px;font-size:18px;margin:0 0 10px}
+  .formula .r{color:var(--ink-soft);font-size:14px;margin-top:5px}
+  .formula b{color:var(--ink)}
+  .bigstat{font-size:50px;font-weight:800;line-height:1;letter-spacing:-.02em;color:var(--accent)}
+
+  .notes{display:none}
+  #notesPanel{display:none;border-top:1px solid var(--line);background:#fff;padding:12px 22px;
+    font-size:15px;line-height:1.5;color:var(--ink-soft);max-height:24vh;overflow:auto;flex:none}
+  #notesPanel b{color:var(--ink)}
+  #app.notes #notesPanel{display:block}
+
+  .hud{flex:none;display:flex;align-items:center;gap:10px;padding:9px 16px;background:#0f172a;color:#e2e8f0;font-size:13px}
+  .hud .count{font-variant-numeric:tabular-nums;color:#94a3b8;min-width:96px}
+  .hud button{background:#1e293b;color:#e2e8f0;border:1px solid #334155;border-radius:7px;padding:5px 10px;
+    font-size:13px;cursor:pointer;font-family:inherit}
+  .hud button:hover{background:#334155;border-color:#475569}
+  .hud .title{color:#94a3b8;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex:1}
+
+  #overview{display:none;flex:1;overflow:auto;padding:22px}
+  #app.overview #overview{display:block}
+  #app.overview .stage-wrap{display:none}
+  .ovgrid{display:grid;grid-template-columns:repeat(auto-fill,268px);gap:16px}
+  .thumb{position:relative;width:268px;height:151px;overflow:hidden;border-radius:9px;border:3px solid transparent;
+    background:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(15,23,42,.14)}
+  .thumb:hover{border-color:#94a3b8}
+  .thumb.current{border-color:var(--accent)}
+  .thumb .slide{box-shadow:none;border-radius:0;opacity:1 !important;visibility:visible !important;
+    transform:scale(.2094);transform-origin:top left}
+  .thumb .n{position:absolute;left:5px;top:5px;background:var(--accent);color:#fff;font-size:11px;font-weight:800;
+    border-radius:5px;padding:2px 6px;z-index:5}
+
+  @media print{
+    html,body{background:#fff;overflow:visible;height:auto}
+    .hud,#notesPanel{display:none !important}
+    .stage-wrap{display:block;overflow:visible;height:auto}
+    .stage{transform:none !important;width:auto;height:auto;display:block}
+    .slide{position:relative;inset:auto;opacity:1 !important;visibility:visible !important;box-shadow:none;
+      border-radius:0;page-break-after:always;break-after:page;border-bottom:1px solid #ccc}
+    .slide:last-child{page-break-after:auto}
+    @page{size:338mm 190mm;margin:0}
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="arS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 0 L10 5 L0 10 z" fill="#334155"/></marker>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 0 L10 5 L0 10 z" fill="#dc2626"/></marker>
+  <marker id="arV" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 0 L10 5 L0 10 z" fill="#7c3aed"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+    <path d="M0 0 L10 5 L0 10 z" fill="#059669"/></marker>
+</defs></svg>
+
+<div id="app">
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+
+      <!-- ============ 1 ============ -->
+      <section class="slide active" data-title="Титул">
+        <div class="grow">
+          <div class="kicker">Методические указания. Семинар</div>
+          <h1>Диаграмма спагетти</h1>
+          <p class="sub" style="font-size:23px;max-width:940px">
+            Как увидеть потери перемещений на плане участка, измерить их
+            и обосновать перепланировку расчётом
+          </p>
+          <div class="cards c3" style="max-width:1000px">
+            <div class="card accent">
+              <div class="badge">Инструмент</div>
+              <p><b>Диаграмма спагетти</b> - траектория фактических перемещений человека, детали или транспорта,
+                нанесённая на план участка</p>
+            </div>
+            <div class="card">
+              <div class="badge w">Данные</div>
+              <p>Наблюдение на рабочем месте: путь, остановки, причины задержек, время и длина маршрута</p>
+            </div>
+            <div class="card">
+              <div class="badge g">Результат</div>
+              <p>Карта текущего состояния перемещений, расчёт потерь и план перепланировки с эффектом</p>
+            </div>
+          </div>
+        </div>
+        <div class="footnote">
+          План семинара: назначение и место инструмента, объекты наблюдения, подготовка, сбор данных, легенда,
+          алгоритм построения, пример диаграммы, расчёт показателей, чтение диаграммы, перепланировка,
+          связь с другими инструментами, ошибки, практика, выводы
+        </div>
+        <div class="notes">
+          <b>Тайминг 45-60 минут:</b> теория и разбор диаграммы 20 минут, практика 25 минут, защита 10 минут, выводы 5 минут.<br>
+          <b>Раздатка:</b> план участка на A3, цветные карандаши или маркеры, секундомер, рулетка или дальномер,
+          нить и линейка для измерения длины пути, бланк наблюдения.<br>
+          <b>Ключевая мысль:</b> спагетти не оценивает людей, она оценивает планировку. Об этом надо сказать
+          персоналу до начала наблюдения, иначе вы получите не факты, а сопротивление.
+        </div>
+      </section>
+
+      <!-- ============ 2 ============ -->
+      <section class="slide" data-title="Назначение и место инструмента">
+        <div class="kicker">Слайд 2. Назначение</div>
+        <h2>Что показывает диаграмма и чем она отличается от карты потока</h2>
+        <p class="sub">Карта потока создания ценности отвечает на вопрос, где теряем на уровне всего потока.
+          Диаграмма спагетти отвечает на вопрос, где теряем на уровне перемещений внутри участка или операции.</p>
+        <div class="cards c4" style="margin-bottom:16px">
+          <div class="card accent" style="text-align:center">
+            <div class="bigstat">2 из 8</div>
+            <p style="margin-top:8px">вида потерь вскрывает напрямую: <b>перемещения</b> и <b>транспортировку</b></p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--warn)">до 30 %</div>
+            <p style="margin-top:8px">времени рабочего может уходить на ходьбу, поиск и переноску</p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--violet)">1 план</div>
+            <p style="margin-top:8px">в масштабе: без него путь нельзя перевести в метры</p>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="bigstat" style="color:var(--ok)">3 шага</div>
+            <p style="margin-top:8px">снять факт, переставить оборудование, снять факт снова</p>
+          </div>
+        </div>
+        <div class="cards c3" style="flex:1">
+          <div class="card"><h3>Видно то, что скрыто в норме</h3><p>Время цикла и нормы не показывают, сколько метров
+            человек прошёл. Спагетти делает невидимые потери видимыми за один день наблюдения</p></div>
+          <div class="card"><h3>Решение спорное становится очевидным</h3><p>Клубок линий на плане убеждает лучше отчёта:
+            обсуждают не мнения, а конкретный маршрут и конкретные метры</p></div>
+          <div class="card"><h3>Проверка после изменений</h3><p>Повторная съёмка после перепланировки даёт честное
+            было и стало, а не декларацию об улучшении</p></div>
+        </div>
+        <div class="notes">
+          <b>Связь уровней:</b> VSM - макроуровень потока; карта процесса - мезоуровень; диаграмма спагетти - микроуровень перемещений внутри операции или на участке. Спагетти выбирают там, где карта верхнего уровня
+          показала потерю перемещений.<br>
+          <b>Оговорка про 30 процентов:</b> цифра зависит от вида работ. В сборке и логистике доля ходьбы выше,
+          у станочника ниже. Слушателям давайте диапазон, а не точное значение.
+        </div>
+      </section>
+
+      <!-- ============ 3 ============ -->
+      <section class="slide" data-title="Объекты наблюдения">
+        <div class="kicker">Слайд 3. Объект наблюдения</div>
+        <h2>Четыре типичных объекта наблюдения</h2>
+        <p class="sub">До начала наблюдения выберите один объект и один период. Смешивать объекты на одной схеме
+          нельзя: получится нечитаемый клубок.</p>
+        <div class="cards c4" style="flex:1">
+          <div class="card accent">
+            <div class="badge">1</div><h3>Оператор</h3>
+            <p><b>Наблюдаем:</b> путь человека за цикл и за смену.<br>
+               <b>Ищем:</b> лишние шаги, возвраты, поиск инструмента и материала, хождение за тарой.<br>
+               <b>Пример:</b> станочник за смену проходит несколько километров между станками и складом.</p>
+          </div>
+          <div class="card">
+            <div class="badge">2</div><h3>Деталь или материал</h3>
+            <p><b>Наблюдаем:</b> маршрут изделия от входа до выхода, включая ожидание.<br>
+               <b>Ищем:</b> встречные и возвратные перемещения, лишние перекладки.<br>
+               <b>Пример:</b> заготовка проходит через весь цех четыре раза до готовности.</p>
+          </div>
+          <div class="card">
+            <div class="badge">3</div><h3>Транспорт</h3>
+            <p><b>Наблюдаем:</b> маршрут тележки, погрузчика, тельфера.<br>
+               <b>Ищем:</b> порожние пробеги, объезды, пересечения с людскими потоками.<br>
+               <b>Пример:</b> погрузчик делает шесть рейсов туда и обратно с половинной загрузкой.</p>
+          </div>
+          <div class="card">
+            <div class="badge">4</div><h3>Документ, посетитель, пациент</h3>
+            <p><b>Наблюдаем:</b> путь бумаги или человека по кабинетам.<br>
+               <b>Ищем:</b> согласования ради согласований, ожидание в очередях, возвраты за справкой.<br>
+               <b>Пример:</b> заявление проходит восемь кабинетов, из них пять только для визы.</p>
+          </div>
+        </div>
+        <div class="card warn" style="margin-top:14px">
+          <p><b>Правило выбора:</b> берите тот объект, по которому есть жалобы или подозрение на потери,
+            и тот период, который представителен: полная смена, а не удобные сорок минут.</p>
+        </div>
+        <div class="notes">
+          <b>Частая ошибка:</b> наблюдают «вообще за участком» и получают кашу. Один объект, один цвет, одна схема.<br>
+          <b>Если объектов несколько:</b> рисуйте их разными цветами на отдельных листах, а общие пересечения
+          сводите на один план и анализируйте отдельно.
+        </div>
+      </section>
+
+      <!-- ============ 4 ============ -->
+      <section class="slide" data-title="Подготовка к съёмке">
+        <div class="kicker">Слайд 4. Подготовка</div>
+        <h2>Что подготовить до выхода на участок</h2>
+        <p class="sub">Качество диаграммы определяется подготовкой. Без плана в масштабе путь нельзя перевести
+          в метры, а значит нельзя посчитать эффект.</p>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <table>
+            <thead><tr><th style="width:34%">Что подготовить</th><th>Требование</th></tr></thead>
+            <tbody>
+              <tr><td><b>План участка</b></td><td>чертёж или схема расстановки с оборудованием, проходами,
+                входами и выходами, желательно на A3</td></tr>
+              <tr><td><b>Масштаб</b></td><td>указать на листе: например 1:100, то есть 1 см плана равен 1 м
+                участка. Без масштаба расчёт невозможен</td></tr>
+              <tr><td><b>Легенда</b></td><td>линия маршрута, стрелка направления, остановка, причина задержки,
+                зона интенсивности</td></tr>
+              <tr><td><b>Инструменты</b></td><td>карандаш или маркер, секундомер, рулетка или дальномер,
+                нить с линейкой для длины пути, бланк наблюдения</td></tr>
+              <tr><td><b>Период</b></td><td>полный цикл, не менее 10-20 циклов или полная смена; типичный
+                день, а не лучший и не худший</td></tr>
+              <tr><td><b>Согласование</b></td><td>предупредить мастера и рабочих, объяснить цель,
+                соблюдать технику безопасности и не мешать работе</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card accent">
+              <h3>Как объяснить цель персоналу</h3>
+              <p>Не начинайте с оценки людей. Скажите: изучаем планировку, чтобы сократить лишнюю ходьбу.
+                Имена в отчёт не попадают, оценивается не человек, а расстояние.</p>
+            </div>
+            <div class="card warn">
+              <h3>Эффект привыкания</h3>
+              <p>Первые 15-30 минут человек работает неестественно. Дайте привыкнуть к наблюдателю и только
+                потом начинайте замеры, иначе цифры будут завышены или занижены.</p>
+            </div>
+            <div class="card ok">
+              <h3>Техника безопасности</h3>
+              <p>Согласуйте маршрут наблюдателя с правилами участка: не входить в зону работы погрузчика,
+                не мешать транспорту, держаться обозначенных проходов, использовать средства защиты.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Если чертежа нет:</b> нарисуйте схему сами, промерив участок рулеткой. Это занимает час,
+          но без плана диаграмма бесполезна как расчётный инструмент.<br>
+          <b>Альтернатива бумаге:</b> планшет с графическим редактором, фото плана с последующей обводкой,
+          или видеосъёмка сверху с согласования руководства.
+        </div>
+      </section>
+
+      <!-- ============ 5 ============ -->
+      <section class="slide" data-title="Сбор данных">
+        <div class="kicker">Слайд 5. Сбор данных</div>
+        <h2>Как снимать маршрут, чтобы не исказить факт</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div>
+            <ol class="steps">
+              <li><span><b>Встаньте так, чтобы видеть весь участок,</b> и не идите вплотную за человеком:
+                достаточно видеть, куда он направляется.</span></li>
+              <li><span><b>Рисуйте непрерывной линией</b> по плану, не отрывая карандаша: фиксируйте реальный путь,
+                а не кратчайший.</span></li>
+              <li><span><b>Отмечайте остановки точкой и номером,</b> рядом пишите причину: ожидание, поиск,
+                наладка, разговор, возврат за инструментом.</span></li>
+              <li><span><b>Фиксируйте время</b> начала и конца цикла, а также длительность каждой остановки.</span></li>
+              <li><span><b>Повторяйте цикл</b> столько раз, сколько укладывается в период наблюдения:
+                каждый цикл рисуется новой линией.</span></li>
+              <li><span><b>Отдельно отметьте перемещения транспорта</b> и зоны, где маршруты пересекаются.</span></li>
+            </ol>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="card accent">
+              <h3>Как получить длину пути</h3>
+              <p><b>Нить и линейка:</b> выложите нить по линии маршрута, выпрямите и измерьте,
+                переведите по масштабу в метры. Самый точный ручной способ.<br>
+                <b>Шаги:</b> умножьте число шагов на среднюю длину шага 0,7-0,75 м. Грубая оценка.<br>
+                <b>Курвиметр или планировочная программа:</b> быстро и точно при наличии чертежа.<br>
+                <b>Видео сверху или трекер:</b> точная траектория, но требует согласования и обработки.</p>
+            </div>
+            <div class="card warn">
+              <h3>Что обязательно попадает в бланк</h3>
+              <p>Дата и смена, объект наблюдения, число циклов, длина пути по циклам, причины остановок,
+                кто наблюдал, план и масштаб, нештатные события смены.</p>
+            </div>
+            <div class="card red">
+              <h3>Чего нельзя делать</h3>
+              <p>Рисовать путь по памяти после наблюдения, сглаживать зигзаги, просить рабочего показать,
+                как он ходит, и прекращать наблюдение после одного цикла.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Инсайт для аудитории:</b> если человек знает, что за ним наблюдают, он ходит иначе. Поэтому
+          период привыкания обязателен, а выводы делают по нескольким циклам, а не по одному.<br>
+          <b>Практический приём:</b> один наблюдатель рисует, второй ведёт хронометраж и записывает причины
+          остановок. На семинаре дайте эти роли двум разным участникам группы.
+        </div>
+      </section>
+
+      <!-- ============ 6 ============ -->
+      <section class="slide tight" data-title="Легенда диаграммы">
+        <div class="kicker">Слайд 6. Язык диаграммы</div>
+        <h2 style="font-size:32px">Легенда: обозначения на плане</h2>
+        <p class="sub" style="margin:4px 0 12px;font-size:17px">
+          Обозначения стандартизуйте до выхода на участок, иначе схему не сможет прочитать другой человек.
+        </p>
+        <div class="cards c4" style="gap:10px 12px;flex:none">
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <path d="M10 60 C40 20 70 76 100 40 C130 8 160 70 190 34 L228 46" fill="none" stroke="#dc2626" stroke-width="3"/>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Линия маршрута</b><br>
+              <span style="color:#64748b">непрерывная, не отрывая карандаша</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <path d="M10 58 C50 26 80 70 120 44" fill="none" stroke="#dc2626" stroke-width="3"/>
+              <path d="M120 44 l-14 -6 M120 44 l-6 -14" stroke="#dc2626" stroke-width="3" fill="none"/>
+              <circle cx="120" cy="44" r="4" fill="#dc2626"/>
+              <text x="176" y="50" font-size="12" text-anchor="middle" fill="#64748b">направление</text>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Стрелка направления</b><br>
+              <span style="color:#64748b">показывает, куда шёл объект</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <path d="M10 44 H120" stroke="#dc2626" stroke-width="3" fill="none"/>
+              <circle cx="120" cy="44" r="9" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+              <text x="120" y="49" font-size="11" font-weight="700" text-anchor="middle" fill="#dc2626">3</text>
+              <text x="150" y="49" font-size="11" fill="#64748b">ожидание 4 мин</text>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Остановка с номером</b><br>
+              <span style="color:#64748b">рядом причина и длительность</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <ellipse cx="120" cy="44" rx="86" ry="30" fill="#fecaca" opacity="0.8"/>
+              <path d="M44 52 C74 26 100 62 130 36 C158 14 182 52 206 34" fill="none" stroke="#dc2626" stroke-width="2.5"/>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Зона интенсивности</b><br>
+              <span style="color:#64748b">скопление линий, горячая точка</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <rect x="14" y="24" width="90" height="48" fill="#fff" stroke="#334155" stroke-width="2.5"/>
+              <text x="59" y="53" font-size="11" text-anchor="middle" fill="#334155">Станок 2</text>
+              <rect x="132" y="24" width="92" height="48" fill="#eef2f7" stroke="#334155" stroke-width="2.5" stroke-dasharray="6 4"/>
+              <text x="178" y="53" font-size="11" text-anchor="middle" fill="#64748b">склад, стеллаж</text>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Оборудование и места хранения</b><br>
+              <span style="color:#64748b">обозначаются по-разному</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <circle cx="44" cy="26" r="11" fill="#fff" stroke="#334155" stroke-width="2.5"/>
+              <path d="M44 37 v22 M44 59 l-11 18 M44 59 l11 18 M31 47 h26" stroke="#334155" stroke-width="2.5" fill="none"/>
+              <rect x="132" y="34" width="76" height="34" rx="3" fill="#fef3c7" stroke="#b45309" stroke-width="2.5"/>
+              <circle cx="146" cy="70" r="5" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <circle cx="194" cy="70" r="5" fill="#fff" stroke="#334155" stroke-width="2"/>
+              <text x="170" y="56" font-size="10" text-anchor="middle" fill="#92400e">тележка</text>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Оператор и транспорт</b></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <rect x="30" y="22" width="70" height="44" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.5"/>
+              <text x="65" y="50" font-size="11" text-anchor="middle" fill="#64748b">препятствие</text>
+              <path d="M120 44 C150 22 168 66 196 44" fill="none" stroke="#dc2626" stroke-width="3"/>
+              <path d="M210 44 h20" stroke="#dc2626" stroke-width="3" marker-end="url(#arR)"/>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Препятствие и объезд</b><br>
+              <span style="color:#64748b">загромождение прохода, лишняя тара</span></p>
+          </div>
+          <div class="card" style="padding:8px 10px">
+            <svg viewBox="0 0 240 86" width="100%" height="72">
+              <line x1="20" y1="26" x2="220" y2="26" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+              <text x="120" y="20" font-size="11" text-anchor="middle" fill="#64748b">граница зоны оператора</text>
+              <path d="M40 66 H200" stroke="#059669" stroke-width="3"/>
+              <circle cx="40" cy="66" r="5" fill="#059669"/><circle cx="200" cy="66" r="5" fill="#059669"/>
+              <text x="120" y="56" font-size="11" text-anchor="middle" fill="#047857">маршрут после перепланировки</text>
+            </svg>
+            <p style="font-size:14px;margin-top:2px;line-height:1.3"><b>Границы и целевой маршрут</b><br>
+              <span style="color:#64748b">пунктир и зелёная линия цели</span></p>
+          </div>
+        </div>
+        <div class="cards c3" style="margin-top:10px;flex:none;gap:12px">
+          <div class="card" style="padding:10px 14px">
+            <p style="font-size:14px"><b>Масштаб и ориентация.</b>
+              <span style="color:#64748b">На листе обязательно указывают масштаб, стороны света или привязку
+              к входу, дату и смену. Без этого схему нельзя сравнивать с повторной съёмкой.</span></p>
+          </div>
+          <div class="card" style="padding:10px 14px">
+            <p style="font-size:14px"><b>Цвет.</b>
+              <span style="color:#64748b">Один объект наблюдения - один цвет. Если на план наносят несколько
+              объектов, у каждого свой цвет и своя легенда.</span></p>
+          </div>
+          <div class="card" style="padding:10px 14px">
+            <p style="font-size:14px"><b>Нумерация.</b>
+              <span style="color:#64748b">Остановки нумеруют в порядке следования, а расшифровку причин
+              выносят в таблицу рядом с планом.</span></p>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Подчеркните:</b> легенду делают до съёмки, а не после. Если обозначения придумывают по ходу,
+          вторая съёмка будет несопоставима с первой.<br>
+          <b>Совет:</b> распечатайте легенду на отдельном листе и держите перед глазами во время наблюдения.
+        </div>
+      </section>
+
+      <!-- ============ 7 ============ -->
+      <section class="slide" data-title="Алгоритм построения">
+        <div class="kicker">Слайд 7. Методика</div>
+        <h2>Алгоритм построения диаграммы спагетти</h2>
+        <p class="sub" style="margin-bottom:14px">Восемь шагов: от плана участка до расчёта эффекта перепланировки.</p>
+        <ol class="steps">
+          <li><span><b>Определите объект и цель:</b> чьи перемещения изучаем и какую потерю хотим подтвердить или опровергнуть.</span></li>
+          <li><span><b>Подготовьте план в масштабе</b> с оборудованием, проходами, входами и выходами.</span></li>
+          <li><span><b>Согласуйте наблюдение</b> с мастером и персоналом, объясните цель, соблюдайте технику безопасности.</span></li>
+          <li><span><b>Наблюдайте и рисуйте маршрут</b> непрерывной линией, каждый цикл новой линией, с направлением и остановками.</span></li>
+          <li><span><b>Фиксируйте время и причины:</b> длительность цикла, длительность и причину каждой остановки.</span></li>
+          <li><span><b>Измерьте длину пути</b> по масштабу: нить и линейка, курвиметр, шаги или трекер.</span></li>
+          <li><span><b>Проанализируйте клубок:</b> найдите возвраты, петли, пересечения, зоны интенсивности и пустые зоны.</span></li>
+          <li><span><b>Предложите перепланировку, пересчитайте маршрут</b> и после внедрения снимите диаграмму повторно.</span></li>
+        </ol>
+        <div class="card ok" style="margin-top:14px">
+          <p><b>Диаграмма готова, когда:</b> указаны масштаб, дата и смена; видно направление движения;
+            остановки пронумерованы и расшифрованы; длина пути измерена в метрах; сделан вывод
+            и намечено конкретное изменение планировки.</p>
+        </div>
+        <div class="notes">
+          <b>Тайминг:</b> подготовка плана 30-60 минут, наблюдение и съёмка 1-2 смены, обработка и расчёт 1 час,
+          анализ и предложение 1 час. На семинаре всё сжимается за счёт готового плана и короткого периода наблюдения.<br>
+          <b>Частая ошибка:</b> останавливаются на шаге 6 и не доходят до перепланировки. Красивый клубок без
+          предложения по расстановке оборудования - это картинка, а не улучшение.
+        </div>
+      </section>
+
+      <!-- ============ 8 ============ -->
+      <section class="slide tight" data-title="Пример диаграммы">
+        <div class="kicker">Слайд 8. Диаграмма текущего состояния</div>
+        <h2 style="font-size:32px;margin-bottom:2px">Пример: маршрут оператора за четыре цикла</h2>
+        <p class="sub" style="margin:2px 0 6px;font-size:16px">
+          Участок 25 на 15 метров, масштаб 1:100. Оборудование расставлено по цеху линейно,
+          склад и оснастка вынесены на противоположную сторону.
+        </p>
+        <div style="display:flex;gap:16px;flex:1;min-height:0">
+          <svg viewBox="0 0 840 520" width="820" style="flex:none">
+            <rect x="20" y="20" width="800" height="480" fill="#fbfcfe" stroke="#334155" stroke-width="3"/>
+            <text x="30" y="42" font-size="12" fill="#94a3b8">план участка, масштаб 1:100, 25 x 15 м</text>
+
+            <g fill="#fff" stroke="#334155" stroke-width="2.5">
+              <rect x="60" y="60" width="180" height="80"/><rect x="330" y="60" width="180" height="80"/>
+              <rect x="600" y="60" width="160" height="80"/><rect x="70" y="230" width="150" height="90"/>
+              <rect x="340" y="230" width="150" height="90"/><rect x="610" y="230" width="150" height="90"/>
+              <rect x="130" y="400" width="240" height="70"/>
+            </g>
+            <rect x="540" y="400" width="180" height="70" fill="#eef2f7" stroke="#334155" stroke-width="2.5" stroke-dasharray="7 5"/>
+            <g font-size="14" font-weight="700" text-anchor="middle" fill="#0f172a">
+              <text x="150" y="105">Склад заготовок</text>
+              <text x="420" y="105">Стеллаж оснастки</text>
+              <text x="680" y="105">Контроль</text>
+              <text x="145" y="280">Станок 1</text>
+              <text x="415" y="280">Станок 2</text>
+              <text x="685" y="280">Станок 3</text>
+              <text x="250" y="440">Сборочный стол</text>
+              <text x="630" y="440">Тара готовой</text>
+            </g>
+
+            <!-- зона интенсивности -->
+            <ellipse cx="560" cy="190" rx="110" ry="52" fill="#fecaca" opacity="0.55"/>
+            <text x="560" y="146" font-size="12" text-anchor="middle" fill="#b91c1c">зона наибольшей интенсивности</text>
+
+            <!-- маршрут -->
+            <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M250.0 395.0 Q219.0 312.2 205.5 269.9 Q192.0 227.6 171.0 191.3 Q150.0 155.0 145.6 166.6 Q141.2 178.3 146.3 190.6 Q151.3 202.9 148.2 214.0 Q145.0 225.0 191.4 211.9 Q237.9 198.8 285.4 189.9 Q332.9 181.0 376.5 168.0 Q420.0 155.0 424.4 167.3 Q428.8 179.5 423.1 191.1 Q417.4 202.7 416.2 213.8 Q415.0 225.0 460.9 221.3 Q506.8 217.7 552.7 217.1 Q598.6 216.6 641.8 220.8 Q685.0 225.0 679.3 213.4 Q673.6 201.9 680.6 189.4 Q687.5 177.0 683.7 166.0 Q680.0 155.0 636.0 170.8 Q592.0 186.7 546.6 197.3 Q501.2 208.0 458.1 216.5 Q415.0 225.0 452.3 253.0 Q489.6 280.9 522.9 314.0 Q556.1 347.0 593.1 371.0 Q630.0 395.0 565.4 399.6 Q500.8 404.2 436.2 400.2 Q371.6 396.1 310.8 395.6 L250.0 395.0" stroke="#dc2626" stroke-width="2.4" opacity="0.8"/>
+              <path d="M250.0 395.0 Q217.0 313.0 203.4 270.8 Q189.8 228.6 169.9 191.8 Q150.0 155.0 145.6 166.6 Q141.3 178.3 140.0 190.2 Q138.6 202.0 141.8 213.5 Q145.0 225.0 191.1 210.7 Q237.3 196.5 284.4 186.0 Q331.5 175.6 375.8 165.3 Q420.0 155.0 420.7 167.0 Q421.4 179.0 414.8 190.5 Q408.2 202.0 411.6 213.5 Q415.0 225.0 460.9 230.0 Q506.8 235.1 552.7 226.2 Q598.6 217.3 641.8 221.2 Q685.0 225.0 680.6 213.4 Q676.2 201.7 676.0 189.8 Q675.7 177.8 677.9 166.4 Q680.0 155.0 635.7 169.7 Q591.4 184.5 545.6 193.7 Q499.9 202.9 457.4 214.0 Q415.0 225.0 450.9 254.7 Q486.9 284.3 525.7 310.4 Q564.4 336.5 597.2 365.8 Q630.0 395.0 565.4 400.5 Q500.8 405.9 436.2 401.3 Q371.6 396.8 310.8 395.9 L250.0 395.0" stroke="#2563eb" stroke-width="2.4" opacity="0.8"/>
+              <path d="M250.0 395.0 Q213.3 314.5 198.3 272.9 Q183.3 231.2 166.7 193.1 Q150.0 155.0 144.2 166.5 Q138.4 178.1 140.4 190.2 Q142.4 202.3 143.7 213.7 Q145.0 225.0 191.8 213.3 Q238.6 201.5 285.6 190.7 Q332.6 179.9 376.3 167.5 Q420.0 155.0 417.2 166.8 Q414.4 178.5 420.4 190.9 Q426.4 203.3 420.7 214.1 Q415.0 225.0 460.9 229.4 Q506.8 233.8 552.7 232.5 Q598.6 231.2 641.8 228.1 Q685.0 225.0 688.3 212.8 Q691.5 200.6 689.8 188.8 Q688.1 176.9 684.1 166.0 Q680.0 155.0 635.3 168.0 Q590.5 181.1 545.4 192.9 Q500.4 204.7 457.7 214.9 Q415.0 225.0 454.3 250.5 Q493.5 276.0 526.4 309.4 Q559.4 342.9 594.7 369.0 Q630.0 395.0 565.4 399.8 Q500.8 404.6 436.2 404.6 Q371.6 404.5 310.8 399.8 L250.0 395.0" stroke="#f59e0b" stroke-width="2.4" opacity="0.8"/>
+              <path d="M250.0 395.0 Q210.1 315.9 192.6 275.3 Q175.1 234.7 162.6 194.8 Q150.0 155.0 150.9 167.0 Q151.8 179.1 154.1 191.2 Q156.4 203.3 150.7 214.2 Q145.0 225.0 190.4 207.8 Q235.8 190.5 282.9 180.3 Q330.1 170.0 375.1 162.5 Q420.0 155.0 423.5 167.2 Q427.0 179.4 423.3 191.1 Q419.6 202.8 417.3 213.9 Q415.0 225.0 460.9 219.8 Q506.8 214.6 552.7 223.9 Q598.6 233.2 641.8 229.1 Q685.0 225.0 685.4 213.0 Q685.8 201.0 679.8 189.5 Q673.9 178.0 676.9 166.5 Q680.0 155.0 635.6 169.5 Q591.3 184.1 546.0 195.0 Q500.7 205.8 457.8 215.4 Q415.0 225.0 452.5 252.7 Q490.0 280.5 528.1 307.3 Q566.3 334.1 598.2 364.5 Q630.0 395.0 565.4 391.2 Q500.8 387.3 436.2 385.7 Q371.6 384.2 310.8 389.6 L250.0 395.0" stroke="#7c3aed" stroke-width="2.4" opacity="0.8"/>
+            </g>
+
+            <!-- точки остановок первого цикла -->
+            <g>
+              <circle cx="250" cy="395" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="250" y="399" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">1</text>
+              <circle cx="150" cy="155" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="150" y="159" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">2</text>
+              <circle cx="145" cy="225" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="145" y="229" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">3</text>
+              <circle cx="420" cy="155" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="420" y="159" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">4</text>
+              <circle cx="415" cy="225" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="415" y="229" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">5</text>
+              <circle cx="685" cy="225" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="685" y="229" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">6</text>
+              <circle cx="680" cy="155" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="680" y="159" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">7</text>
+              <circle cx="630" cy="395" r="9" fill="#fff" stroke="#0f172a" stroke-width="2.5"/>
+              <text x="630" y="399" font-size="11" font-weight="700" text-anchor="middle" fill="#0f172a">9</text>
+            </g>
+            <path d="M430 240 C470 300 520 340 560 360" fill="none" stroke="#0f172a" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arS)"/>
+            <text x="470" y="330" font-size="11" fill="#0f172a">8 возврат к станку 2</text>
+          </svg>
+
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <div class="card red">
+              <div class="badge r">Факт по участку</div>
+              <p style="font-size:15px">
+                <b>Длина пути за цикл:</b> 61 м<br>
+                <b>Циклов за смену:</b> 48<br>
+                <b>Путь за смену:</b> 2 943 м, или 2,9 км<br>
+                <b>Время перемещений:</b> 45 мин<br>
+                <b>Доля времени смены:</b> 9,3 процента<br>
+                <b>Холостые возвраты:</b> 9 м на цикл<br>
+                <b>Пересечений маршрута:</b> 42 на схеме
+              </p>
+            </div>
+            <div class="card">
+              <h3>Остановки одного цикла</h3>
+              <p style="font-size:14px">
+                1 сборка, старт цикла<br>
+                2 склад заготовок, взял партию<br>
+                3 станок 1, установил заготовку<br>
+                4 стеллаж оснастки, поиск инструмента<br>
+                5 станок 2, обработка<br>
+                6 станок 3, обработка<br>
+                7 контроль, ожидание мастера 4 мин<br>
+                8 возврат к станку 2, переделка<br>
+                9 тара готовой продукции
+              </p>
+            </div>
+            <div class="card warn">
+              <p style="font-size:15px"><b>Главная находка:</b> оператор четырежды за цикл ходит через весь
+                цех. Склад, оснастка и контроль находятся на противоположной стороне от станков,
+                а станок 2 он посещает дважды.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Как показывать:</b> сначала назовите объект и период наблюдения, затем пройдите по одному циклу
+          по номерам остановок, а потом обратите внимание на клубок: чем гуще линии, тем больше потерь.<br>
+          <b>Акцент:</b> зона интенсивности вокруг станков 2 и 3 - там оператор бывает чаще всего,
+          значит оборудование и оснастку надо группировать именно вокруг этих мест.<br>
+          <b>Важно:</b> диаграмму снимают повторно после изменений, иначе эффект остаётся на бумаге.
+        </div>
+      </section>
+
+      <!-- ============ 9 ============ -->
+      <section class="slide" data-title="Расчёт показателей">
+        <div class="kicker">Слайд 9. Расчёт</div>
+        <h2>Пять расчётов: от плана к эффекту в часах</h2>
+        <p class="sub" style="margin-bottom:12px">Считаем на том же примере: 48 циклов за смену,
+          смена 480 минут, скорость ходьбы 1,1 метра в секунду.</p>
+        <div class="cards c2" style="gap:14px;flex:1;align-items:start">
+          <div>
+            <div class="formula">
+              <b>Длина пути за цикл</b> = длина линии на плане, делённая на масштаб<br>
+              <span class="r">610 мм на плане при масштабе 1:100 = <b>61 м</b> за цикл</span>
+            </div>
+            <div class="formula">
+              <b>Путь за смену</b> = длина пути за цикл, умноженная на число циклов<br>
+              <span class="r">61 м в цикле при 48 циклах = <b>2 943 м</b>, или 2,9 км за смену</span>
+            </div>
+            <div class="formula">
+              <b>Время перемещений</b> = путь за смену, делённый на скорость ходьбы<br>
+              <span class="r">2 943 м / 1,1 м/с = 2 675 с = <b>45 мин</b>, или 9,3 процента смены</span>
+            </div>
+          </div>
+          <div>
+            <div class="formula" style="border-left-color:var(--warn)">
+              <b>Доля холостых возвратов</b> = длина возвратов, делённая на длину пути<br>
+              <span class="r">9 м / 61 м = <b>15 процентов</b> пути не создаёт ценности</span>
+            </div>
+            <div class="formula" style="border-left-color:var(--violet)">
+              <b>Экономия после перепланировки</b> = разность путей, умноженная на число циклов<br>
+              <span class="r">(61 - 25) м в цикле при 48 циклах = <b>1 728 м</b> за смену, или 26 мин</span>
+            </div>
+            <div class="card ok" style="margin-top:12px">
+              <p><b>Перевод в деньги и люди:</b> 26 мин в смену при 250 сменах в году
+                дают <b>109 часов</b> рабочего времени в год. Это не повод увольнять людей,
+                а резерв роста выработки или снижения утомляемости.</p>
+            </div>
+          </div>
+        </div>
+        <div class="footnote">Скорость ходьбы берите по факту: для цеха с тарой и обходом препятствий
+          реалистичны 1,0-1,2 метра в секунду. Для тележки и погрузчика считают отдельно.</div>
+        <div class="notes">
+          <b>Проверка здравым смыслом:</b> если путь за смену вышел больше 8 километров, скорее всего
+          ошиблись в масштабе или приняли перемещения транспорта за перемещения человека.<br>
+          <b>Важная оговорка:</b> сокращение ходьбы не равно автоматическому росту выпуска. Эффект реализуется
+          только если высвобожденное время перераспределено: добавлена операция, увеличена партия,
+          снижена утомляемость. Обсудите это с аудиторией.
+        </div>
+      </section>
+
+      <!-- ============ 10 ============ -->
+      <section class="slide" data-title="Как читать диаграмму">
+        <div class="kicker">Слайд 10. Чтение диаграммы</div>
+        <h2>Пять признаков плохой планировки</h2>
+        <div class="cards c3" style="flex:1;align-content:start">
+          <div class="card red">
+            <div class="badge r">1</div><h3>Петли и возвраты</h3>
+            <p>Оператор возвращается туда, где уже был. Причина: оборудование расставлено не в порядке
+              обработки, а по принципу куда встало.</p>
+          </div>
+          <div class="card red">
+            <div class="badge r">2</div><h3>Длинные плечи</h3>
+            <p>Между двумя соседними по процессу операциями десятки метров. Причина: склад и оснастка
+              вынесены за пределы участка.</p>
+          </div>
+          <div class="card warn">
+            <div class="badge w">3</div><h3>Пересечения потоков</h3>
+            <p>Маршрут человека пересекает маршрут погрузчика. Причина: нет разделения людских
+              и транспортных путей, нет разметки и одностороннего движения.</p>
+          </div>
+          <div class="card warn">
+            <div class="badge w">4</div><h3>Зоны интенсивности</h3>
+            <p>Густой клубок в одном месте. Причина: там сосредоточено то, чем пользуются чаще всего,
+              и именно это место надо разгрузить в первую очередь.</p>
+          </div>
+          <div class="card">
+            <div class="badge">5</div><h3>Пустые зоны</h3>
+            <p>Половина площади не используется, но оплачивается. Причина: линейная расстановка
+              вместо ячейки, завышенные проезды и проходы.</p>
+          </div>
+          <div class="card accent">
+            <div class="badge">Правило</div><h3>Всё нужное под рукой</h3>
+            <p>То, чем пользуются каждую минуту, должно быть в зоне нормальной досягаемости:
+              не дальше вытянутой руки, примерно 35-40 сантиметров от корпуса.</p>
+          </div>
+        </div>
+        <div class="cards c2" style="gap:16px;margin-top:14px;flex:none">
+          <div class="card ok">
+            <p style="font-size:16px"><b>Типовые решения.</b> Склад и оснастку переносят к месту использования;
+              оборудование расставляют в порядке обработки по ходу часовой стрелки; делают U-образную ячейку
+              с входом и выходом рядом; вводят разметку проходов и одностороннее движение; применяют 5S
+              и теневые панели для инструмента; стандартизуют маршрут в карте стандартной работы.</p>
+          </div>
+          <div class="card">
+            <p style="font-size:16px"><b>Зоны досягаемости.</b> Нормальная зона - движение только предплечьем,
+              около 35 сантиметров. Максимальная - движение всей рукой, около 50-60 сантиметров.
+              Всё, что дальше, требует шага, а шаг - это потеря перемещения, которую видно на диаграмме.</p>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Мини-упражнение:</b> дайте слушателям план и попросите найти три петли и одну зону интенсивности
+          за две минуты. Это отлично тренирует чтение схемы.<br>
+          <b>Акцент:</b> диаграмма не говорит, как расставить оборудование. Она показывает, где теряются метры.
+          Решение по компоновке принимает команда, исходя из технологии, габаритов и требований безопасности.
+        </div>
+      </section>
+
+      <!-- ============ 11 ============ -->
+      <section class="slide tight" data-title="Перепланировка">
+        <div class="kicker">Слайд 11. Было и стало</div>
+        <h2 style="font-size:32px;margin-bottom:2px">Перепланировка: тот же участок, та же работа</h2>
+        <p class="sub" style="margin:2px 0 6px;font-size:16px">
+          Оборудование сгруппировано в ячейку в порядке обработки, склад и тара рядом, оснастка внутри контура.
+        </p>
+        <div style="display:flex;gap:16px;flex:1;min-height:0">
+          <svg viewBox="0 0 840 520" width="820" style="flex:none">
+            <rect x="20" y="20" width="800" height="480" fill="#fbfcfe" stroke="#334155" stroke-width="3"/>
+            <text x="30" y="42" font-size="12" fill="#94a3b8">тот же участок после перепланировки, масштаб 1:100</text>
+            <rect x="660" y="60" width="140" height="200" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+            <text x="730" y="170" font-size="12" text-anchor="middle" fill="#64748b">освободившаяся</text>
+            <text x="730" y="188" font-size="12" text-anchor="middle" fill="#64748b">площадь</text>
+
+            <g fill="#fff" stroke="#334155" stroke-width="2.5">
+              <rect x="230" y="220" width="110" height="50"/><rect x="150" y="300" width="110" height="60"/>
+              <rect x="280" y="380" width="110" height="60"/><rect x="420" y="380" width="110" height="60"/>
+              <rect x="520" y="290" width="100" height="60"/><rect x="520" y="200" width="100" height="60"/>
+            </g>
+            <rect x="330" y="200" width="110" height="50" fill="#eef2f7" stroke="#334155" stroke-width="2.5" stroke-dasharray="7 5"/>
+            <g font-size="12" font-weight="700" text-anchor="middle" fill="#0f172a">
+              <text x="285" y="250">Склад</text>
+              <text x="205" y="336">Станок 1</text>
+              <text x="335" y="416">Станок 2</text>
+              <text x="475" y="416">Станок 3</text>
+              <text x="570" y="326">Контроль</text>
+              <text x="570" y="236">Сборка</text>
+              <text x="385" y="230">Тара</text>
+            </g>
+            <rect x="330" y="270" width="180" height="100" rx="10" fill="none" stroke="#059669" stroke-width="2" stroke-dasharray="9 6"/>
+            <text x="420" y="264" font-size="11" text-anchor="middle" fill="#047857">зона работы оператора внутри ячейки</text>
+
+            <g fill="none" stroke="#059669" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M285.0 275.0 Q257.9 282.3 244.3 285.5 Q230.7 288.8 217.8 291.9 Q205.0 295.0 228.6 306.1 Q252.2 317.3 274.3 331.0 Q296.3 344.7 315.7 359.8 Q335.0 375.0 358.8 373.9 Q382.6 372.8 406.4 372.3 Q430.2 371.7 452.6 373.4 Q475.0 375.0 491.1 361.3 Q507.2 347.6 518.3 329.1 Q529.4 310.5 544.7 297.8 Q560.0 285.0 556.7 279.9 Q553.3 274.8 559.8 269.7 Q566.3 264.6 563.2 259.8 Q560.0 255.0 530.2 254.8 Q500.5 254.6 470.8 257.3 Q441.0 259.9 413.0 257.5 Q385.0 255.0 367.9 258.1 Q350.9 261.2 334.6 268.2 Q318.3 275.1 301.6 275.0 L285.0 275.0" stroke="#059669" stroke-width="2.4" opacity="0.95"/>
+              <path d="M285.0 275.0 Q257.7 281.4 243.3 281.8 Q229.0 282.1 217.0 288.6 Q205.0 295.0 225.8 310.8 Q246.5 326.5 269.2 339.1 Q292.0 351.7 313.5 363.4 Q335.0 375.0 358.8 373.3 Q382.6 371.7 406.4 372.4 Q430.2 373.1 452.6 374.1 Q475.0 375.0 487.8 358.1 Q500.5 341.2 518.0 328.8 Q535.6 316.4 547.8 300.7 Q560.0 285.0 560.2 279.9 Q560.5 274.8 562.2 269.7 Q563.9 264.6 562.0 259.8 Q560.0 255.0 530.2 256.2 Q500.5 257.4 470.8 258.1 Q441.0 258.9 413.0 256.9 Q385.0 255.0 367.6 256.3 Q350.1 257.5 332.9 259.7 Q315.7 261.9 300.3 268.5 L285.0 275.0" stroke="#059669" stroke-width="2.4" opacity="0.5"/>
+            </g>
+            <g>
+              <circle cx="285" cy="275" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="285" y="279" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">1</text>
+              <circle cx="205" cy="295" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="205" y="299" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">2</text>
+              <circle cx="335" cy="375" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="335" y="379" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">3</text>
+              <circle cx="475" cy="375" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="475" y="379" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">4</text>
+              <circle cx="560" cy="285" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="560" y="289" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">5</text>
+              <circle cx="560" cy="255" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="560" y="259" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">6</text>
+              <circle cx="385" cy="255" r="8" fill="#fff" stroke="#047857" stroke-width="2.5"/>
+              <text x="385" y="259" font-size="10" font-weight="700" text-anchor="middle" fill="#047857">7</text>
+            </g>
+          </svg>
+
+          <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+            <table style="font-size:15px">
+              <thead><tr><th>Показатель</th><th style="width:80px">Было</th><th style="width:80px">Стало</th></tr></thead>
+              <tbody>
+                <tr><td><b>Путь за цикл, м</b></td><td>61</td><td>25</td></tr>
+                <tr><td><b>Путь за смену, км</b></td><td>2,9</td><td>1,2</td></tr>
+                <tr><td><b>Время ходьбы, мин</b></td><td>45</td><td>18</td></tr>
+                <tr><td><b>Доля смены, процентов</b></td><td>9,3</td><td>3,8</td></tr>
+                <tr><td><b>Площадь участка, кв. м</b></td><td>280</td><td>110</td></tr>
+                <tr><td><b>Возвраты за цикл, м</b></td><td>9</td><td>0</td></tr>
+              </tbody>
+            </table>
+            <div class="card ok">
+              <h3>Что сделали</h3>
+              <ul class="ul" style="font-size:14px;margin-top:4px">
+                <li>Оборудование поставлено в порядке обработки по ходу цикла</li>
+                <li>Склад заготовок и тара готовой продукции оказались рядом: вход и выход рядом</li>
+                <li>Оснастку перенесли внутрь ячейки, убрали хождение на стеллаж</li>
+                <li>Контроль встроили в ячейку, убрали поход к отдельному столу</li>
+              </ul>
+            </div>
+            <div class="card warn">
+              <p style="font-size:15px"><b>Эффект:</b> Минус 59 процентов пути, минус 26 минут ходьбы в смену, занимаемая площадь сокращается с 280 до 110 квадратных метров. Освободившуюся площадь отдают под новый участок или резерв роста.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Ключевая мысль слайда:</b> ни одна операция не ускорена, технология не изменена,
+          а путь сократился вдвое. Это и есть ценность перепланировки.<br>
+          <b>Обязательный шаг:</b> после перестановки снимите диаграмму заново и сравните с первой.
+          Реальная цифра почти всегда отличается от расчётной, и это нормально: важно зафиксировать факт.<br>
+          <b>Осторожно:</b> любая перепланировка согласуется с требованиями охраны труда, пожарной безопасности
+          и нормами ширины проходов. Экономия метров не отменяет эвакуационные проходы.
+        </div>
+      </section>
+
+      <!-- ============ 12 ============ -->
+      <section class="slide" data-title="Связь с другими инструментами">
+        <div class="kicker">Слайд 12. Место в системе</div>
+        <h2>Диаграмма спагетти и другие инструменты бережливого производства</h2>
+        <p class="sub" style="margin-bottom:12px">Спагетти почти никогда не применяют в одиночку:
+          она либо подготавливает решение, либо проверяет его.</p>
+        <table>
+          <thead><tr><th style="width:26%">Инструмент</th><th style="width:37%">Связь с диаграммой спагетти</th>
+            <th>Типичная последовательность</th></tr></thead>
+          <tbody>
+            <tr><td><b>Карта потока создания ценности</b></td>
+              <td>Карта потока показывает, где теряем на уровне потока; спагетти уточняет потерю
+                перемещений внутри найденного участка</td>
+              <td>Сначала карта потока, затем спагетти на приоритетном участке</td></tr>
+            <tr><td><b>5S</b></td>
+              <td>Поиск инструмента и материала сразу виден на маршруте как петли и остановки;
+                5S убирает причину</td>
+              <td>Сначала спагетти, затем 5S, затем повторная съёмка</td></tr>
+            <tr><td><b>Карта стандартной работы</b></td>
+              <td>Спагетти даёт фактический маршрут, карта стандартной работы фиксирует
+                целевой маршрут и последовательность действий</td>
+              <td>Спагетти до и после, стандарт как закрепление результата</td></tr>
+            <tr><td><b>Ячейка и компоновка</b></td>
+              <td>Диаграмма обосновывает переход от линейной расстановки к U-образной ячейке</td>
+              <td>Спагетти, проект ячейки, перестановка, повторная съёмка</td></tr>
+            <tr><td><b>Супермаркет и канбан</b></td>
+              <td>Убирают хождение за материалом: запас стоит у линии, а не на дальнем складе</td>
+              <td>Спагетти выявляет дальние походы за материалом, затем супермаркет</td></tr>
+            <tr><td><b>Быстрая переналадка</b></td>
+              <td>Внутренние и внешние операции переналадки часто сопровождаются лишними перемещениями</td>
+              <td>Спагетти на операции переналадки, затем разделение внутреннего и внешнего</td></tr>
+          </tbody>
+        </table>
+        <div class="card accent" style="margin-top:16px">
+          <p><b>Правило связки:</b> каждый инструмент снимает свой слой потерь. Карта потока убирает ожидания
+            между процессами, супермаркет убирает хождение за материалом, 5S убирает поиск,
+            а диаграмма спагетти показывает, сколько метров это всё вместе стоит.</p>
+        </div>
+        <div class="notes">
+          <b>Вопрос аудитории:</b> что дешевле - купить второй погрузчик или переставить стеллаж ближе к линии?
+          Спагетти даёт аргумент: сначала убери метры, потом покупай технику.<br>
+          <b>Акцент:</b> инструмент дешёвый. Бюджет - план участка, карандаш и день наблюдения.
+          Это его главное преимущество перед проектными решениями по перепланировке без замеров.
+        </div>
+      </section>
+
+      <!-- ============ 13 ============ -->
+      <section class="slide" data-title="Типичные ошибки и чек-лист">
+        <div class="kicker">Слайд 13. Контроль качества</div>
+        <h2>Как получаются бесполезные диаграммы</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div class="card red">
+            <div class="badge r">Семь типовых ошибок</div>
+            <ul class="ul" style="margin-top:2px">
+              <li>Маршрут нарисован по памяти, а не по факту наблюдения</li>
+              <li>Нет плана в масштабе: красивую картинку нельзя перевести в метры</li>
+              <li>Наблюдали один цикл или десять минут, а вывод сделали на смену</li>
+              <li>На одном плане смешали оператора, транспорт и деталь без легенды</li>
+              <li>Наблюдатель мешал работе, поэтому маршрут искажён</li>
+              <li>Сделали вывод про человека, а не про планировку: получили сопротивление</li>
+              <li>Остановились на картинке: нет перепланировки и повторной съёмки</li>
+            </ul>
+          </div>
+          <div class="card ok">
+            <div class="badge g">Чек-лист приёмки диаграммы</div>
+            <ul class="ul plain" style="margin-top:2px">
+              <li>Указаны объект наблюдения, дата, смена, число циклов</li>
+              <li>План в масштабе, есть легенда и стороны света</li>
+              <li>Линия непрерывная, направление движения видно</li>
+              <li>Остановки пронумерованы, причины расшифрованы</li>
+              <li>Длина пути измерена и переведена в метры</li>
+              <li>Рассчитаны путь за смену, время и доля времени</li>
+              <li>Отмечены возвраты, петли, зоны интенсивности и пересечения</li>
+              <li>Есть предложение по планировке и план повторной съёмки</li>
+            </ul>
+          </div>
+        </div>
+        <div class="footnote">Правило защиты: по диаграмме должно быть видно, сколько метров было,
+          сколько станет и за счёт чего именно. Нет цифр - нет диаграммы, есть рисунок.</div>
+        <div class="notes">
+          <b>Используйте чек-лист как критерий оценки</b> практических работ и раздайте его группам
+          до начала упражнения.<br>
+          <b>Хороший приём:</b> группы меняются диаграммами и проверяют друг друга по чек-листу,
+          находя минимум три недочёта.
+        </div>
+      </section>
+
+      <!-- ============ 14 ============ -->
+      <section class="slide" data-title="Практическое задание">
+        <div class="kicker">Слайд 14. Практика</div>
+        <h2>Задание: снять маршрут и обосновать перепланировку</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:start">
+          <div class="card accent">
+            <h3>Входные данные</h3>
+            <p>План участка в масштабе с расстановкой оборудования, перечень операций цикла,
+              число циклов за смену и скорость ходьбы. Вариант из методических указаний
+              или реальный процесс: цех, склад, лаборатория, деканат, кухня, приёмная.</p>
+            <h3 style="margin-top:12px">Результат за 40-60 минут</h3>
+            <ul class="ul">
+              <li>Диаграмма спагетти текущего состояния на плане</li>
+              <li>Таблица остановок с причинами и временем</li>
+              <li>Расчёт пути за цикл, за смену, времени и доли</li>
+              <li>Предложение по перепланировке и расчёт эффекта</li>
+            </ul>
+          </div>
+          <div>
+            <table>
+              <thead><tr><th style="width:32%">Критерий</th><th>Что оцениваем</th></tr></thead>
+              <tbody>
+                <tr><td><b>Полнота съёмки</b></td><td>маршрут непрерывный, направление видно, остановки
+                  пронумерованы и расшифрованы, указаны дата, смена и число циклов</td></tr>
+                <tr><td><b>Расчёты</b></td><td>длина пути переведена в метры по масштабу, посчитаны путь
+                  за смену, время и доля, нет арифметических ошибок</td></tr>
+                <tr><td><b>Анализ</b></td><td>найдены возвраты, петли, пересечения и зоны интенсивности,
+                  вывод опирается именно на схему</td></tr>
+                <tr><td><b>Предложение</b></td><td>конкретная перепланировка с расчётом эффекта,
+                  учтены проходы и требования безопасности</td></tr>
+                <tr><td><b>Защита</b></td><td>пять минут на группу: что увидели, что меняем, какой ждём результат</td></tr>
+              </tbody>
+            </table>
+            <div class="card warn" style="margin-top:12px">
+              <p><b>Роли в группе:</b> наблюдатель с карандашом, хронометрист с секундомером,
+                аналитик с расчётами, докладчик. Роли меняются каждые пятнадцать минут.</p>
+            </div>
+          </div>
+        </div>
+        <div class="notes">
+          <b>Если нет цеха:</b> снимите маршрут в аудитории или в кампусе: путь студента между корпусами,
+          путь преподавателя к копировальному аппарату, путь посетителя в приёмной комиссии. Методика та же.<br>
+          <b>Материалы:</b> распечатанный план A3, маркеры трёх цветов, нить и линейка, калькулятор,
+          бланк наблюдения, чек-лист приёмки.
+        </div>
+      </section>
+
+      <!-- ============ 15 ============ -->
+      <section class="slide" data-title="Выводы">
+        <div class="kicker">Слайд 15. Итоги</div>
+        <h2>Что нужно унести с семинара</h2>
+        <div class="cards c2" style="gap:16px;flex:1;align-items:stretch">
+          <div class="card accent" style="display:flex;flex-direction:column;justify-content:center">
+            <p style="font-size:21px;line-height:1.42">
+              Диаграмма спагетти - самый дешёвый способ увидеть потери перемещений.
+              План, карандаш и один день наблюдения заменяют споры о том, много ли мы ходим.
+            </p>
+          </div>
+          <div>
+            <ul class="ul" style="font-size:18px">
+              <li>Оцениваем планировку, а не человека: без этого фактов не будет</li>
+              <li>Без плана в масштабе нет метров, а без метров нет расчёта</li>
+              <li>Возвраты, петли и пересечения важнее общей длины пути</li>
+              <li>Технологию не меняют: сначала убирают лишние метры компоновкой</li>
+              <li>Диаграмму снимают дважды: до изменений и после, иначе эффект не доказан</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card ok" style="margin-top:14px;text-align:center">
+          <p style="font-size:19px"><b>Спасибо за внимание.</b> Переходим к защите практических работ
+            и разбору диаграмм.</p>
+        </div>
+        <div class="footnote">
+          Литература для подготовки: М. Ротер и Д. Шук, Учитесь видеть бизнес-процессы;
+          Д. Вумек и Д. Джонс, Бережливое производство; Т. Оно, Производственная система Тойоты;
+          методические указания по организации и нормированию труда.
+        </div>
+        <div class="notes">
+          <b>Финальный акцент на 30 секунд:</b> снимите маршрут одного человека за один цикл на этой неделе.
+          Один план, один карандаш, честные метры - и вы увидите то, что скрыто в нормах времени.<br>
+          <b>Домашнее задание:</b> построить диаграмму спагетти выбранного процесса, приложить таблицу
+          остановок, расчёт показателей и предложение по перепланировке с расчётом эффекта.
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div id="overview"><div class="ovgrid" id="ovgrid"></div></div>
+  <div id="notesPanel"></div>
+
+  <div class="hud">
+    <button id="prev">Назад</button>
+    <button id="next">Вперёд</button>
+    <span class="count" id="count">1 / 15</span>
+    <span class="title" id="crumb">Титул</span>
+    <button id="btnOv">Все слайды</button>
+    <button id="btnNotes">Заметки</button>
+    <button id="btnFull">На весь экран</button>
+    <button id="btnPrint">Печать</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var app = document.getElementById('app');
+  var stage = document.getElementById('stage');
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.stage .slide'));
+  var ovgrid = document.getElementById('ovgrid');
+  var notesPanel = document.getElementById('notesPanel');
+  var crumb = document.getElementById('crumb');
+  var countEl = document.getElementById('count');
+  var i = 0;
+
+  function fit(){
+    if (app.classList.contains('overview')) { stage.style.transform = 'none'; return; }
+    var wrap = document.querySelector('.stage-wrap');
+    var s = Math.min((wrap.clientWidth - 40) / 1280, (wrap.clientHeight - 32) / 720);
+    stage.style.transform = 'scale(' + s + ')';
+  }
+  window.addEventListener('resize', fit);
+
+  function show(n){
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function(s, k){ s.classList.toggle('active', k === i); });
+    var notes = slides[i].querySelector('.notes');
+    notesPanel.innerHTML = notes ? notes.innerHTML : 'Заметок к слайду нет.';
+    crumb.textContent = slides[i].getAttribute('data-title') || '';
+    countEl.textContent = (i + 1) + ' / ' + slides.length;
+    Array.prototype.forEach.call(ovgrid.children, function(t, k){ t.classList.toggle('current', k === i); });
+    fit();
+  }
+  function go(n){ app.classList.remove('overview'); show(n); }
+
+  slides.forEach(function(s, k){
+    var t = document.createElement('div');
+    t.className = 'thumb';
+    var num = document.createElement('div');
+    num.className = 'n'; num.textContent = k + 1;
+    var clone = s.cloneNode(true);
+    clone.classList.remove('active');
+    t.appendChild(num); t.appendChild(clone);
+    t.addEventListener('click', function(){ go(k); });
+    ovgrid.appendChild(t);
+  });
+
+  function toggleOverview(){
+    app.classList.toggle('overview');
+    if (app.classList.contains('overview')) {
+      var t = ovgrid.children[i];
+      if (t && t.scrollIntoView) t.scrollIntoView({block:'center'});
+    }
+    fit();
+  }
+
+  document.getElementById('prev').onclick = function(){ go(i - 1); };
+  document.getElementById('next').onclick = function(){ go(i + 1); };
+  document.getElementById('btnOv').onclick = toggleOverview;
+  document.getElementById('btnNotes').onclick = function(){
+    app.classList.toggle('notes'); fit();
+    document.getElementById('btnNotes').style.background = app.classList.contains('notes') ? '#2563eb' : '';
+  };
+  document.getElementById('btnFull').onclick = function(){
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+  };
+  document.getElementById('btnPrint').onclick = function(){ window.print(); };
+
+  document.addEventListener('keydown', function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key;
+    if (k === 'ArrowRight' || k === 'ArrowDown' || k === ' ' || k === 'PageDown' || k === 'Enter') { go(i + 1); e.preventDefault(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp' || k === 'Backspace') { go(i - 1); e.preventDefault(); }
+    else if (k === 'Home') { go(0); e.preventDefault(); }
+    else if (k === 'End') { go(slides.length - 1); e.preventDefault(); }
+    else if (k === 'Escape') { if (app.classList.contains('overview')) toggleOverview(); }
+    else if (k === 'o' || k === 'O' || k === 'щ' || k === 'Щ') { toggleOverview(); }
+    else if (k === 'n' || k === 'N' || k === 'т' || k === 'Т') { document.getElementById('btnNotes').click(); }
+    else if (k === 'f' || k === 'F' || k === 'а' || k === 'А') { document.getElementById('btnFull').click(); }
+    else if (k === 'p' || k === 'P' || k === 'з' || k === 'З') { window.print(); }
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>
