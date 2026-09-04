@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Производственный анализ</title>
+<title>Производственный анализ. Семинар: пакет ведущего</title>
 <style>
 /* шрифты встроены в файл: интернет не нужен */
 @font-face {
@@ -100,105 +100,99 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%;margin:0}
-  body{background:#e8e9e6;color:var(--ink);font-family:var(--p);font-size:19px;overflow:hidden}
+  body{background:#e8e9e6;color:var(--ink);font-family:var(--p);font-size:18px;overflow:hidden}
   #app{height:100%;display:flex;flex-direction:column}
 
   .stage-wrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0}
   .stage{width:1280px;height:720px;position:relative;transform-origin:center center;flex:none}
   .slide{
     position:absolute;inset:0;background:var(--bg);
-    border:1px solid #dcdcd6;
-    padding:30px 40px;display:flex;flex-direction:column;
+    border:1px solid #dcdcd6;overflow:hidden;
+    padding:26px 36px;display:flex;flex-direction:column;
     opacity:0;visibility:hidden;transition:opacity .18s ease;
   }
   .slide.active{opacity:1;visibility:visible}
   .slide::after{
-    content:attr(data-num);position:absolute;right:26px;bottom:16px;
+    content:attr(data-num);position:absolute;right:22px;bottom:12px;
     font-family:var(--m);font-size:15px;color:var(--dim);
   }
 
-  h1{font-family:var(--n);font-size:74px;font-weight:700;line-height:.98;margin:0;letter-spacing:-.005em}
-  h2{font-family:var(--n);font-size:44px;font-weight:700;line-height:1.04;margin:0;letter-spacing:-.005em}
-  h3{font-family:var(--n);font-size:26px;font-weight:700;margin:0 0 6px}
-  .kick{font-family:var(--m);font-size:14px;color:var(--dim);letter-spacing:.04em;margin-bottom:6px;text-transform:uppercase}
-  .hd{flex:none;margin-bottom:14px}
-  .lede{font-size:21px;line-height:1.34;color:var(--mut);margin:8px 0 0;max-width:1040px}
-  p{margin:0 0 10px;line-height:1.4}
+  h1{font-family:var(--n);font-size:70px;font-weight:700;line-height:.98;margin:0;letter-spacing:-.005em}
+  h2{font-family:var(--n);font-size:39px;font-weight:700;line-height:1.05;margin:0}
+  h3{font-family:var(--n);font-size:24px;font-weight:700;margin:0 0 6px}
+  .kick{font-family:var(--m);font-size:14px;color:var(--dim);text-transform:uppercase;margin-bottom:5px}
+  .hd{flex:none;margin-bottom:12px}
+  .lede{font-size:19px;line-height:1.34;color:var(--mut);margin:7px 0 0;max-width:1000px}
+  p{margin:0 0 9px;line-height:1.4}
 
-  .grid{display:grid;gap:16px;flex:1;min-height:0}
-  .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)}
-  .g4{grid-template-columns:repeat(4,1fr)} .g5{grid-template-columns:repeat(5,1fr)}
+  .grid{display:grid;gap:14px;flex:1;min-height:0;align-content:start}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g23{grid-template-columns:1fr 320px}
+  .g32{grid-template-columns:330px 1fr}
 
-  /* нарисованная от руки рамка */
-  .box{border:2.5px solid var(--ink);padding:14px 18px;
+  .box{border:2.5px solid var(--ink);padding:12px 16px;
     border-radius:255px 12px 225px 15px/15px 225px 12px 255px;background:rgba(255,255,255,.55)}
-  .box.blue{border-color:var(--blue)}
-  .box.red{border-color:var(--red)}
-  .box.green{border-color:var(--green)}
-  .box.orange{border-color:var(--orange)}
-  .box .lab{font-family:var(--n);font-size:20px;font-weight:700;text-transform:uppercase;
-    letter-spacing:.02em;margin-bottom:8px;color:var(--ink)}
+  .box.blue{border-color:var(--blue)} .box.red{border-color:var(--red)}
+  .box.green{border-color:var(--green)} .box.orange{border-color:var(--orange)}
+  .box .lab{font-family:var(--n);font-size:19px;font-weight:700;text-transform:uppercase;
+    margin-bottom:7px;color:var(--ink)}
   .box.blue .lab{color:var(--blue)} .box.red .lab{color:var(--red)}
   .box.green .lab{color:var(--green)} .box.orange .lab{color:var(--orange)}
-  .box .big{font-family:var(--m);font-size:44px;font-weight:700;line-height:1}
-  .box .sub{font-size:17px;color:var(--mut);line-height:1.35;margin-top:6px}
+  .box .sub{font-size:16.5px;line-height:1.34;color:var(--mut);margin-top:5px}
   .box .sub b{color:var(--ink)}
 
   ul.dot{list-style:none;padding:0;margin:0}
-  ul.dot li{position:relative;padding-left:22px;margin-bottom:11px;font-size:19px;line-height:1.32}
-  ul.dot li::before{content:'';position:absolute;left:0;top:.42em;width:11px;height:11px;
+  ul.dot li{position:relative;padding-left:20px;margin-bottom:8px;font-size:17.5px;line-height:1.32}
+  ul.dot li::before{content:'';position:absolute;left:0;top:.42em;width:10px;height:10px;
     border:2.5px solid var(--ink);border-radius:60% 40% 55% 45%/50% 55% 45% 50%}
   ul.dot.blue li::before{border-color:var(--blue)}
   ul.dot.red li::before{border-color:var(--red)}
   ul.dot.green li::before{border-color:var(--green)}
-  ul.dot li b{font-weight:700}
-  ol.num{margin:0;padding-left:26px}
-  ol.num li{margin-bottom:10px;font-size:19px;line-height:1.32}
-  ol.num li b{font-weight:700}
+  ol.num{margin:0;padding-left:24px}
+  ol.num li{margin-bottom:8px;font-size:17.5px;line-height:1.32}
 
-  table{width:100%;border-collapse:collapse;font-size:16px}
-  th,td{padding:7px 10px;border-bottom:1.5px solid #d8d9d3;text-align:left}
-  th{font-family:var(--n);font-size:17px;text-transform:uppercase;letter-spacing:.02em;
-    color:var(--ink);border-bottom:2.5px solid var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:15.5px}
+  th,td{padding:5px 9px;border-bottom:1.5px solid #d8d9d3;text-align:left;vertical-align:top}
+  th{font-family:var(--n);font-size:16px;text-transform:uppercase;color:var(--ink);
+    border-bottom:2.5px solid var(--ink)}
   td{color:var(--mut)} td b{color:var(--ink)}
-  td.n{text-align:center;font-family:var(--m);font-size:18px}
-  tr:last-child td{border-bottom:none}
+  td.n{text-align:center;font-family:var(--m);font-size:16.5px;white-space:nowrap}
 
-  .formula{font-family:var(--m);font-size:22px;margin-bottom:9px;color:var(--ink)}
-  .formula .c{font-family:var(--p);font-size:16px;color:var(--mut);display:block;margin-top:2px}
+  .formula{font-family:var(--m);font-size:21px;margin-bottom:8px;color:var(--ink)}
+  .formula .c{font-family:var(--p);font-size:15.5px;color:var(--mut);display:block;margin-top:2px}
   .formula.blue{color:var(--blue)} .formula.red{color:var(--red)}
   .formula.green{color:var(--green)} .formula.orange{color:var(--orange)}
 
   .und{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='9'><path d='M3 6 C 24 2, 46 8, 68 4 S 112 8, 137 5' fill='none' stroke='%23e8590c' stroke-width='3.2' stroke-linecap='round'/></svg>");
     background-repeat:repeat-x;background-position:0 100%;padding-bottom:5px;font-weight:700}
-  .und.red{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='9'><path d='M3 6 C 24 2, 46 8, 68 4 S 112 8, 137 5' fill='none' stroke='%23c92a2a' stroke-width='3.2' stroke-linecap='round'/></svg>")}
-  .und.blue{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='9'><path d='M3 6 C 24 2, 46 8, 68 4 S 112 8, 137 5' fill='none' stroke='%231c5fa8' stroke-width='3.2' stroke-linecap='round'/></svg>")}
 
-  /* пометка на полях */
-  .note-pos{position:absolute;font-family:var(--x);font-size:17px;line-height:1.2;z-index:4}
-  .note-pos.red{color:var(--red)} .note-pos.blue{color:var(--blue)} .note-pos.green{color:var(--green)}
-  .arw{position:absolute;pointer-events:none}
+  /* пометка ведущего: стоит в своей колонке, ни на что не наезжает */
+  .aside{font-family:var(--x);font-size:17px;line-height:1.28;margin-bottom:16px}
+  .aside.red{color:var(--red)} .aside.blue{color:var(--blue)} .aside.green{color:var(--green)}
+  .aside.r1{transform:rotate(-1.6deg)} .aside.r2{transform:rotate(1.4deg)}
+  .aside svg{display:block;margin-bottom:2px}
 
-  /* скриншот из Excel */
-  .xl{border:2px solid #b6b8b2;background:#fff;font-family:var(--x);font-size:15px;display:flex;flex-direction:column;min-height:0}
-  .xl .bar{background:#f3f3f1;border-bottom:1px solid #d8d9d3;padding:5px 12px;font-size:14px;color:#5b626b;
-    display:flex;gap:12px;align-items:center}
+  /* раздатка: скриншот из Excel */
+  .xl{border:2px solid #b6b8b2;background:#fff;font-family:var(--x);font-size:15px}
+  .xl .bar{background:#f3f3f1;border-bottom:1px solid #d8d9d3;padding:4px 10px;font-size:13.5px;
+    color:#5b626b;display:flex;gap:10px;align-items:center}
   .xl .bar b{color:var(--ink)}
-  .xl .fx{border-bottom:1px solid #d8d9d3;padding:4px 12px;font-size:14px;color:#5b626b;display:flex;gap:10px}
+  .xl .fx{border-bottom:1px solid #d8d9d3;padding:3px 10px;font-size:13.5px;color:#5b626b;display:flex;gap:8px}
   .xl .fx span{font-family:var(--m);color:var(--ink)}
-  .xl table{border-collapse:collapse;font-size:15px;width:100%}
-  .xl th{background:#f3f3f1;border:1px solid #d0d1cb;color:#5b626b;font-family:var(--x);font-size:13px;
-    font-weight:400;text-transform:none;letter-spacing:0;padding:3px 8px;text-align:center;width:34px}
-  .xl td{border:1px solid #d0d1cb;padding:4px 9px;color:var(--ink)}
-  .xl td.hd{background:#f3f3f1;font-weight:700;text-align:center;font-size:14px}
-  .xl td.num{font-family:var(--x);text-align:center;white-space:nowrap}
+  .xl table{border-collapse:collapse;font-size:14.5px;width:100%}
+  .xl th{background:#f3f3f1;border:1px solid #d0d1cb;color:#5b626b;font-family:var(--x);font-size:12.5px;
+    font-weight:400;text-transform:none;padding:2px 7px;text-align:center;width:30px}
+  .xl td{border:1px solid #d0d1cb;padding:3px 8px;color:var(--ink);vertical-align:middle}
+  .xl td.hd{background:#f3f3f1;font-weight:700;text-align:center;font-size:13.5px}
+  .xl td.num{text-align:center;white-space:nowrap}
   .xl td.ok{background:#e6f3e9} .xl td.bad{background:#fbe5e5}
   .xl td.tot{background:#f3f3f1;font-weight:700}
-  .xl td.ttl{font-weight:700;font-size:15px}
-  .xl .tab{display:inline-block;background:#f3f3f1;border:1px solid #d0d1cb;border-bottom:none;
-    padding:3px 14px;font-size:14px;margin-top:-1px}
+  .xl td.ttl{font-weight:700;font-size:14.5px}
+  .xl .tabs{display:flex;gap:2px;margin-top:-1px;padding-left:2px}
+  .xl .tabs span{background:#f3f3f1;border:1px solid #d0d1cb;border-bottom:none;padding:2px 12px;font-size:13.5px}
 
-  /* консоль */
   .hud{flex:none;display:flex;align-items:center;gap:8px;padding:7px 14px;background:#f1f1ee;
     border-top:1px solid #dcdcd6;color:var(--mut);font-family:var(--m);font-size:13px}
   .hud .count{color:var(--ink);min-width:92px;letter-spacing:.08em}
@@ -229,7 +223,7 @@
     .hud,#notesPanel{display:none !important}
     .stage-wrap{display:block;overflow:visible;height:auto}
     .stage{transform:none !important;width:auto;height:auto;display:block}
-    .slide{position:relative;inset:auto;opacity:1 !important;visibility:visible !important;
+    .slide{position:relative;inset:auto;opacity:1 !important;visibility:visible !important;overflow:visible;
       page-break-after:always;break-after:page;margin-bottom:8px}
     .slide:last-child{page-break-after:auto}
     *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
@@ -244,76 +238,173 @@
 
       <!-- ============ 1 ============ -->
       <section class="slide active" data-title="Титул" data-num="1">
-        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;position:relative">
-          <div class="kick">Семинар для мастеров и начальников участков</div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+          <div class="kick">Пакет ведущего семинара</div>
           <h1>Производственный<br>анализ</h1>
-          <p class="lede" style="font-size:26px;color:var(--ink);max-width:900px;margin-top:20px">
-            Как я за два года научился видеть смену по часам, а не по отчёту в конце месяца.</p>
-          <p class="lede" style="font-size:20px;margin-top:14px">
-            Участок механообработки, станок 14, изделие «вал-шестерня». Все цифры ниже с одного рабочего места
-            и одной смены: 8:00-17:00, задание 84 штуки.</p>
-          <div style="display:flex;gap:22px;margin-top:28px;align-items:flex-end">
-            <div class="box orange" style="max-width:250px"><div class="lab">Что это даёт</div>
-              <div class="sub">Видеть отклонение в течение часа и успевать на него ответить</div></div>
-            <div class="box blue" style="max-width:250px"><div class="lab">Что для этого нужно</div>
-              <div class="sub">Бланк, ручка и человек, который обязан на отклонение реагировать</div></div>
-            <div class="box green" style="max-width:250px"><div class="lab">Главное правило</div>
-              <div class="sub">Отклонение без причины считается незафиксированным</div></div>
+          <p class="lede" style="font-size:24px;color:var(--ink);max-width:880px;margin-top:16px">
+            Как я провожу трёхчасовой семинар по инструменту для мастеров и начальников участков.</p>
+          <p class="lede" style="font-size:18px;margin-top:10px">Собрал свою раскладку: программа по блокам,
+            что говорить, какие упражнения давать и что раздать на руки. Переделывайте под себя.</p>
+          <div style="display:flex;gap:18px;margin-top:24px">
+            <div class="box orange" style="max-width:250px"><div class="lab">Что внутри</div>
+              <div class="sub">Программа на 3 часа, раздатки, упражнения, ответы на вопросы участников</div></div>
+            <div class="box blue" style="max-width:250px"><div class="lab">Для кого</div>
+              <div class="sub">10-15 человек: мастера, начальники участков, лидеры проектов</div></div>
+            <div class="box green" style="max-width:250px"><div class="lab">Что нужно</div>
+              <div class="sub">Бланки, секундомер, доска. Ничего дорогого</div></div>
           </div>
-          <div class="note-pos red" style="right:60px;top:14px;transform:rotate(-3deg)">всё, что дальше,<br>проверено на себе</div>
-          <svg class="arw" style="right:150px;top:88px;width:74px;height:54px;transform:rotate(28deg)" viewBox="0 0 74 54">
-            <path d="M2 4 C 16 24, 44 34, 60 48" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/>
-            <path d="M46 48 L60 48 L60 34" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/></svg>
         </div>
-        <div class="notes"><b>Как открываю.</b> Я не теоретик и не консультант, я начальник участка.
-          Дальше всё, что у меня реально сработало. Начинал с одной операции и одного бланка.<br>
-          <b>О чём не говорю.</b> Не буду рассказывать про инвестиции и IT-системы.
-          Всё, что ниже, стоит ноль рублей и работает на любом участке.<br>
-          <b>Тайминг.</b> Суть и алгоритм 10 минут, расчёт такта и бланк 15 минут, разбор смены 10 минут,
-          причины и корень 10 минут, практика 15 минут.</div>
+        <div class="notes"><b>Как открываю.</b> Я веду этот семинар уже восьмой раз, для своих же проектных команд.
+          Дальше - моя раскладка, она не единственная верная.<br>
+          <b>Что сказать в первые две минуты.</b> «Сегодня вы уйдёте с посчитанным тактом своей смены
+          и с бланком, который можно повесить завтра утром». Это сразу задаёт планку результата.<br>
+          <b>Тайминг этой подачи.</b> Пакет 20 минут, программа 10 минут, блоки 20 минут, вопросы 10 минут.</div>
       </section>
 
       <!-- ============ 2 ============ -->
-      <section class="slide" data-title="Что это такое" data-num="2">
-        <div class="hd"><div class="kick">С чего начать</div><h2>Что это такое, если по-простому</h2></div>
-        <p class="lede" style="font-size:23px;color:var(--ink)">
-          Производственный анализ - это когда <span class="und">ты в течение часа видишь, что смена пошла не туда</span>,
-          а не в конце месяца из отчёта.</p>
-        <div class="grid g3" style="margin-top:14px">
+      <section class="slide" data-title="Кто придёт" data-num="2">
+        <div class="hd"><div class="kick">Прежде чем собирать людей</div><h2>Кто придёт к вам на семинар</h2></div>
+        <div class="grid g3" style="flex:none">
+          <div class="box blue"><div class="lab">Состав группы</div>
+            <div class="sub"><b>10-15 человек.</b> Мастера, начальники участков, лидеры проектов.
+              Лучше, если из разных цехов - спорят интереснее.</div></div>
+          <div class="box green"><div class="lab">Цель семинара</div>
+            <div class="sub">Человек уходит и умеет: <b>посчитать такт, заполнить бланк,
+              разобрать причины, запустить ПА у себя.</b></div></div>
+          <div class="box orange"><div class="lab">Чего не делаем</div>
+            <div class="sub">Не читаем лекцию и не показываем сорок слайдов.
+              <b>Ведущий говорит не больше 40 процентов времени.</b></div></div>
+        </div>
+        <div class="grid g23" style="margin-top:14px">
+          <div class="box red"><div class="lab">Главная ошибка, которую я сам совершал</div>
+            <div class="sub" style="font-size:17.5px">Превратить семинар в лекцию: рассказать всё правильно,
+              красиво и полностью - и получить людей, которые всё поняли и ничего не начали делать.<br><br>
+              <b>Работает другое:</b> дали минимум теории, тут же посчитали, тут же заполнили бланк,
+              тут же поругались из-за причины простоя.</div></div>
+          <div>
+            <div class="aside red r1">
+              <svg viewBox="0 0 60 34" width="60" height="34"><path d="M4 30 C 16 24, 34 16, 50 6" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/><path d="M38 6 L50 6 L50 18" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/></svg>
+              если в группе одни начальники, берите примеры из их же цехов, а не из учебника
+            </div>
+            <div class="aside blue r2">
+              сажайте за один стол людей из разных участков: спор о причинах - лучшая часть семинара
+            </div>
+          </div>
+        </div>
+        <div class="notes"><b>Про состав.</b> Если придут одни инженеры по бережливому производству,
+          семинар превратится в обсуждение терминов. Нужны те, кто реально ведёт смену: они и будут заполнять бланк.<br>
+          <b>Про цель.</b> Спросите себя после семинара: «Участник может завтра утром повесить бланк и заполнить его?»
+          Если нет - семинар был лекцией.</div>
+      </section>
+
+      <!-- ============ 3 ============ -->
+      <section class="slide" data-title="Как устроен семинар" data-num="3">
+        <div class="hd"><div class="kick">Программа</div><h2>Три фазы на три часа</h2></div>
+        <div class="grid g3" style="flex:none">
+          <div class="box blue"><div class="lab">Фаза 1. Поняли, 40 минут</div>
+            <ul class="dot blue">
+              <li>Вступление и вопрос в зал, 10 минут</li>
+              <li>Расчёт такта у доски, 15 минут</li>
+              <li>Упражнение: считаем свою смену, 15 минут</li>
+            </ul></div>
+          <div class="box orange"><div class="lab">Фаза 2. Научились, 60 минут</div>
+            <ul class="dot">
+              <li>Бланк и правила заполнения, 15 минут</li>
+              <li>Упражнение: заполняем смену, 25 минут</li>
+              <li>Разбор: читаем отклонения, 20 минут</li>
+            </ul></div>
+          <div class="box green"><div class="lab">Фаза 3. Запустим, 65 минут</div>
+            <ul class="dot green">
+              <li>Как запустить у себя, 15 минут</li>
+              <li>Группы причин и Парето, 15 минут</li>
+              <li>Коренная причина, 20 минут</li>
+              <li>Цепочка помощи и итоги, 15 минут</li>
+            </ul></div>
+        </div>
+        <div class="box" style="margin-top:14px;flex:none"><div class="lab">Что подготовить заранее</div>
+          <div class="grid g4" style="margin-top:4px">
+            <div class="sub"><b>Раздатка 1</b> - образец заполненного бланка смены, по числу участников</div>
+            <div class="sub"><b>Раздатка 2</b> - чистые бланки, штук двадцать, и образец приказа</div>
+            <div class="sub"><b>Доска или флипчарт</b> и маркеры двух цветов</div>
+            <div class="sub"><b>Секундомер</b> и калькулятор: хватит телефона</div>
+          </div></div>
+        <div class="notes"><b>Раскладка по минутам:</b> вступление 10, расчёт 15, упражнение 15,
+          бланк 15, заполнение 25, разбор 20, запуск 15, причины 15, корень 20, цепочка и итоги 15.
+          Итого 180 минут с запасом на споры.<br>
+          <b>Где срезают.</b> Если времени два часа, выбрасывайте цепочку помощи и сокращайте упражнения до 10 минут.
+          Бланк и расчёт такта не трогайте - это ядро.</div>
+      </section>
+
+      <!-- ============ 4 ============ -->
+      <section class="slide" data-title="Блок 1. Вступление" data-num="4">
+        <div class="hd"><div class="kick">Блок 1, 10 минут</div><h2>Как открыть семинар</h2></div>
+        <div class="grid g23">
+          <div class="box blue"><div class="lab">Что я говорю и делаю</div>
+            <ol class="num">
+              <li><b>Одна фраза вместо определения:</b> «Производственный анализ - это когда ты видишь,
+                что смена пошла не туда, в течение часа. Не в конце месяца из отчёта».</li>
+              <li><b>Раздаю образец заполненного бланка и молчу минуту.</b> Пусть посмотрят.
+                Обычно сами начинают искать, где у них так же.</li>
+              <li><b>Вопрос в зал:</b> «Поднимите руку, у кого на участке видно по часам, идёт смена по плану?»</li>
+            </ol></div>
+          <div>
+            <div class="aside red r1">
+              <svg viewBox="0 0 60 34" width="60" height="34"><path d="M4 30 C 16 24, 34 16, 50 6" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/><path d="M38 6 L50 6 L50 18" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/></svg>
+              не начинайте с определения из документа - начните с вопроса
+            </div>
+            <div class="aside blue r2">молчите минуту после раздачи образца: это самая рабочая пауза на семинаре</div>
+          </div>
+        </div>
+        <div class="box red" style="margin-top:14px;flex:none"><div class="lab">Что обычно отвечают и что отвечаю я</div>
+          <div class="grid g2" style="margin-top:4px">
+            <div class="sub"><b>«У нас всё видно в конце смены».</b> Мой ответ: «Вот это и есть потеря.
+              Вы узнаёте о проблеме, когда её уже нельзя исправить».</div>
+            <div class="sub"><b>«У нас план выполняется».</b> Мой ответ: «Хорошо. А на сколько процентов
+              он выполняется, вы узнаёте в тот же час или на следующий день?»</div>
+          </div></div>
+        <div class="notes"><b>Если никто не поднял руку.</b> Это нормально и даже хорошо: значит, вы попали в боль.
+              Скажите: «Тогда сегодняшние три часа - про то, как это изменить».<br>
+          <b>Если подняли все.</b> Спросите, кто ведёт запись на бумаге, а не в голове. Обычно половина рук опускается.<br>
+          <b>Ошибка.</b> Не показывайте в эти десять минут ни одной формулы. Задача блока - чтобы люди захотели считать.</div>
+      </section>
+
+      <!-- ============ 5 ============ -->
+      <section class="slide" data-title="Блок 2. Суть" data-num="5">
+        <div class="hd"><div class="kick">Блок 2, 5 минут</div><h2>Суть инструмента: три правила</h2>
+          <p class="lede" style="font-size:18px">Пять минут теории, дальше - расчёт. Больше про суть рассказывать не надо.</p></div>
+        <div class="grid g3" style="flex:none">
           <div class="box blue"><div class="lab">Правило первое</div>
             <div class="sub"><b>Задокументировано.</b> Данные записаны: на бланке, на доске или в файле.
               Не в голове у мастера.</div></div>
           <div class="box orange"><div class="lab">Правило второе</div>
             <div class="sub"><b>Визуализировано.</b> Отклонение видно глазами, без расчётов в уме.</div></div>
           <div class="box green"><div class="lab">Правило третье</div>
-            <div class="sub"><b>Понятно всем.</b> Оператор, я и директор читаем один и тот же бланк
-              и понимаем его одинаково.</div></div>
+            <div class="sub"><b>Понятно всем.</b> Оператор, мастер и директор читают один бланк
+              и понимают его одинаково.</div></div>
         </div>
-        <div class="grid g2" style="margin-top:16px;flex:none">
-          <div class="box"><div class="lab">Зачем я это завёл</div>
+        <div class="grid g2" style="margin-top:14px">
+          <div class="box"><div class="lab">Чем инструмент не является</div>
             <ul class="dot">
-              <li><b>Раньше видел провал постфактум.</b> Месячный отчёт приходил, когда исправлять было нечего.</li>
-              <li><b>Споры «кто виноват».</b> Пока нет записи, у каждого своя версия, почему смена встала.</li>
-              <li><b>Не было приоритетов.</b> Что чинить в первую очередь, решали на слух.</li>
+              <li><b>Не заменяет картирование потока.</b> Карта - как устроен поток, ПА - как идёт смена.</li>
+              <li><b>Не ищет виноватых.</b> Как только ищем крайнего, причины перестают писать честно.</li>
             </ul></div>
-          <div class="box red"><div class="lab">Чего я от ПА не жду</div>
-            <ul class="dot red">
-              <li><b>Он не заменит картирование потока.</b> Карта - это как устроен поток, ПА - как идёт смена.</li>
-              <li><b>Он не ищет виноватых.</b> Как только начинаешь искать крайнего, причины перестают писать честно.</li>
-              <li><b>Он не работает сам.</b> Заполненный и не прочитанный бланк хуже пустого.</li>
-            </ul></div>
+          <div class="box red"><div class="lab">Что обязательно сказать вслух</div>
+            <div class="sub" style="font-size:17.5px"><b>Отклонение без указанной причины считается незафиксированным.</b><br><br>
+              Эту фразу я повторяю трижды за семинар: в начале, перед упражнением и в итогах.
+              Если этого не сказать, бланки будут с цифрами и без причин - то есть бесполезными.</div></div>
         </div>
-        <div class="notes"><b>Ключевая мысль.</b> ПА измеряет не производительность, а стабильность выполнения плана.
-          Если план занижен, ПА этого не покажет - это другой вопрос.<br>
-          <b>Вопрос в зал.</b> «Поднимите руку, у кого на участке видно по часам, идёт смена по плану?»
-          Обычно поднимают двое-трое. Остальные узнают итог на следующий день - с этого и начинаются потери.</div>
+        <div class="notes"><b>Почему так коротко.</b> Всё, что сверх этих пяти минут, участники забудут.
+          Они запомнят то, что посчитают сами.<br>
+          <b>Приём.</b> Спросите: «Что будет, если бланк заполнять, но не разбирать?»
+          Пусть сами сформулируют, что это видимость управления.</div>
       </section>
 
-      <!-- ============ 3 ============ -->
-      <section class="slide" data-title="Три этапа" data-num="3">
-        <div class="hd"><div class="kick">Порядок действий</div><h2>Три вечера работы: готовим, запускаем, разбираем</h2></div>
-        <div class="box" style="margin-bottom:14px">
-          <svg viewBox="0 0 1180 260" width="100%" height="218"><path d="M31.0 36.0 L205.0 35.4 L379.0 34.2 L380.1 129.0 L378.1 225.1 L205.0 225.0 L29.8 223.3 L30.7 129.0 L31.0 36.0 Z" fill="#fff" fill-opacity=".55" stroke="#1c5fa8" stroke-width="3" stroke-linejoin="round"/>
+      <!-- ============ 6 ============ -->
+      <section class="slide" data-title="Блок 3. Алгоритм" data-num="6">
+        <div class="hd"><div class="kick">Блок 3, 5 минут</div><h2>Алгоритм: три этапа, семь шагов</h2>
+          <p class="lede" style="font-size:18px">Показываю схему и сразу говорю: порядок менять нельзя.</p></div>
+        <div class="box" style="flex:none;margin-bottom:14px">
+          <svg viewBox="0 0 1180 260" width="100%" height="212"><path d="M31.0 36.0 L205.0 35.4 L379.0 34.2 L380.1 129.0 L378.1 225.1 L205.0 225.0 L29.8 223.3 L30.7 129.0 L31.0 36.0 Z" fill="#fff" fill-opacity=".55" stroke="#1c5fa8" stroke-width="3" stroke-linejoin="round"/>
 <text x="56.0" y="78.0" font-family="PT Mono, Consolas, monospace" font-size="34" fill="#1c5fa8" text-anchor="start" font-weight="700">1</text>
 <text x="104.0" y="76.0" font-family="PT Sans Narrow, Arial Narrow, sans-serif" font-size="26" fill="#22282e" text-anchor="start" font-weight="700">Готовим</text>
 <path d="M55.7 105.2 L62.0 104.2 L68.5 104.6 L68.0 111.0 L67.3 116.1 L62.0 117.6 L56.4 116.2 L56.7 111.0 L55.7 105.2 Z" fill="#1c5fa8" stroke="#1c5fa8" stroke-width="2"/>
@@ -341,144 +432,92 @@
 <text x="30.0" y="250.0" font-family="PT Sans, Arial, sans-serif" font-size="16" fill="#aeb6bf" text-anchor="start">собрать бланк мало - дальше идёт разбор отклонений</text></svg>
         </div>
         <div class="grid g3">
-          <div class="box blue"><div class="lab">Что получаю на первом этапе</div>
-            <div class="sub">Знаю, где слежу. Выбрал, на чём веду. Посчитал такт и темп.
-              Бланк подготовлен под мой темп, а не под чужой.</div></div>
-          <div class="box orange"><div class="lab">Что получаю на втором этапе</div>
-            <div class="sub">Люди обучены, бланки висят там, где работают. По ходу смены пишется факт
-              и сразу причина, а не вечером по памяти.</div></div>
-          <div class="box green"><div class="lab">Что получаю на третьем этапе</div>
-            <div class="sub">Причины сгруппированы, корень найден, мероприятия запланированы
+          <div class="box blue"><div class="lab">Этап 1. Готовим</div>
+            <div class="sub">Знаем, где следим. Выбрали, на чём ведём. <b>Посчитали такт и темп.</b>
+              Бланк готовят под этот темп.</div></div>
+          <div class="box orange"><div class="lab">Этап 2. Запускаем</div>
+            <div class="sub">Люди обучены, бланки там, где работают. <b>По ходу смены пишут факт и причину,</b>
+              а не вечером по памяти.</div></div>
+          <div class="box green"><div class="lab">Этап 3. Разбираем</div>
+            <div class="sub">Причины сгруппированы, <b>корень найден</b>, мероприятия запланированы
               с фамилиями и сроками.</div></div>
         </div>
-        <div class="notes"><b>Моя главная ошибка на старте.</b> Я распечатал бланки и развесил их,
-          даже не посчитав такт. В графе «план» стояли цифры из головы, и месяц мы анализировали ерунду.<br>
-          <b>Порядок.</b> Сначала места контроля и такт, потом бланк. Менять местами нельзя.</div>
+        <div class="notes"><b>На чём настаиваю.</b> Бланк готовят последним. Сначала такт.
+          Я сам однажды развесил бланки до расчёта - и месяц анализировал цифры, взятые из головы.<br>
+          <b>Вопрос в зал.</b> «Что будет, если начать с бланка, не посчитав такт?»
+          Правильный ответ: в графе план будут неверные числа, и весь анализ пойдёт по ложной базе.</div>
       </section>
 
-      <!-- ============ 4 ============ -->
-      <section class="slide" data-title="Где следить" data-num="4">
-        <div class="hd"><div class="kick">Шаг 1 из семи: где следить</div><h2>Где я поставил точки контроля</h2></div>
-        <div class="grid g2">
-          <div class="box blue"><div class="lab">Что я включил в перечень</div>
-            <ol class="num">
-              <li><b>Конечная операция потока.</b> Там видно, сколько реально вышло с участка.</li>
-              <li><b>Передача на другой участок.</b> На стыке теряется больше всего, и это всегда ничья зона.</li>
-              <li><b>Операция, которая сдерживает всех.</b> У меня это станок 14, он же узкое место.</li>
-              <li><b>Операция, где чаще всего летит скорость.</b> По журналу за полгода видно сразу.</li>
-            </ol></div>
-          <div class="box orange"><div class="lab">Как закрепил, чтобы не бросили</div>
-            <ul class="dot">
-              <li><b>Согласовал перечень с директором по производству</b> и разослал исполнителям.</li>
-              <li><b>Издал приказ:</b> точки контроля, ответственные, как часто заполняем и проверяем,
-                кто решает при отклонении, кто отвечает за всё и когда докладывает руководству.</li>
-              <li><b>Вёл на всех участках,</b> а не только на своём пилотном.</li>
-            </ul>
-            <div class="sub" style="margin-top:10px;font-size:18px">У меня в перечень попали три точки:
-              конечная операция, станок 14 и передача на сборку.</div></div>
-          <div class="box red" style="grid-column:1 / -1"><div class="lab">На чём я обжёгся</div>
-            <div class="grid g4" style="margin-top:6px">
-              <div class="sub"><b>Вешал там, где удобно.</b> Доска стояла у прохода, а горело на другом конце участка.</div>
-              <div class="sub"><b>Взял двадцать точек сразу.</b> Ни одна не заполнялась честно, через месяц забросил.</div>
-              <div class="sub"><b>Не взял передаточные операции.</b> Полгода спорили со смежниками, пока не повесили бланк на стыке.</div>
-              <div class="sub"><b>Не закрепил приказом.</b> Пока нет документа, бланк заполняют по настроению.</div>
-            </div></div>
-        </div>
-        <div class="notes"><b>Совет.</b> Начните с трёх точек: конец потока, узкое место, стык с соседом.
-          Этого хватит, чтобы инструмент заработал.<br>
-          <b>Откуда брать точки.</b> Из картирования потока и хронометражей, а не из жалоб.
-          Если картирования не было, сначала сделайте его.</div>
-      </section>
-
-      <!-- ============ 5 ============ -->
-      <section class="slide" data-title="На чём вести" data-num="5">
-        <div class="hd"><div class="kick">Шаг 2 из семи: на чём вести</div><h2>На чём вести: четыре варианта</h2></div>
-        <div class="box" style="margin-bottom:12px">
-          <table>
-            <thead><tr><th style="width:20%">Способ</th><th style="width:40%">За что я его ценю</th><th style="width:40%">Чем он мне мешает</th></tr></thead>
-            <tbody>
-              <tr><td><b>Бланки на бумаге</b></td>
-                <td>Бесплатно, лежит на рабочем месте, исправления видно, начать можно завтра</td>
-                <td>Потом всё надо перебивать в компьютер, нужен архив, почерк бывает нечитаем</td></tr>
-              <tr><td><b>Файл в компьютере</b></td>
-                <td>Сразу считает, хранится годами, не теряется</td>
-                <td>Нужен компьютер у станка и человек, умеющий в таблицы</td></tr>
-              <tr><td><b>Доска и маркер</b></td>
-                <td>Видит вся смена, формат можно менять на ходу, ничего не надо готовить</td>
-                <td>Сохранение только по фотографии, маркеры вечно сохнут</td></tr>
-              <tr><td><b>MES-система</b></td>
-                <td>Всё видно в реальном времени, OEE и брак считаются сами</td>
-                <td>Дорого. Без подготовленных людей превращается в красивую картинку</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="grid g2">
-          <div class="box green"><div class="lab">Как договаривались о цветах</div>
-            <ul class="dot green">
-              <li><b>Зелёный</b> - час по плану, ничего писать не надо</li>
-              <li><b>Красный</b> - не успели. Пишем: сколько не доделали, почему, что сделали</li>
-              <li>Заголовки и сетку на доске рисуем перманентным маркером, цифры - стираемым</li>
-            </ul></div>
-          <div class="box"><div class="lab">Как я выбирал</div>
-            <ul class="dot">
-              <li><b>Начинал с бумаги.</b> Дёшево, наглядно, ничего не надо внедрять.</li>
-              <li><b>Доска нужна там, где обсуждаем у линии</b> - и не меньше 900 на 600 мм.</li>
-              <li><b>В файл перешёл через полгода,</b> когда бланки уже заполняли без напоминаний.</li>
-            </ul></div>
-        </div>
-        <div class="notes"><b>Почему не начал с MES.</b> Пока люди не привыкли писать причину на бумаге,
-          система даст только красивые графики и ничего не изменит.<br>
-          <b>Проверка.</b> Если бланк заполняют «для галочки», проблема не в носителе, а в том,
-          что на отклонения никто не реагирует.</div>
-      </section>
-
-      <!-- ============ 6 ============ -->
-      <section class="slide" data-title="Считаем такт" data-num="6">
-        <div class="hd"><div class="kick">Шаг 3 из семи: считаем такт</div><h2>Считаем такт</h2>
-          <p class="lede" style="font-size:19px">Такт - это с какой скоростью мы обязаны выдавать изделие,
-            чтобы закрыть заказ. Считаю в четыре действия.</p></div>
-        <div class="grid g2">
+      <!-- ============ 7 ============ -->
+      <section class="slide" data-title="Блок 4. Расчёт такта" data-num="7">
+        <div class="hd"><div class="kick">Блок 4, 15 минут</div><h2>Расчёт такта: что показать у доски</h2></div>
+        <div class="grid g32">
           <div>
-            <div class="formula">А = конец смены минус начало<span class="c">с 8:00 до 17:00 - это 9 часов, или 32 400 секунд</span></div>
+            <div class="formula">А = конец смены минус начало<span class="c">с 8:00 до 17:00 - 9 часов, или 32 400 секунд</span></div>
             <div class="formula">В = перерывы, когда работа стоит<span class="c">пересменка 30 мин, обед 60 мин,
-              личные нужды 2 раза по 10 мин, уборка 10 мин: итого 120 минут, или 7 200 секунд</span></div>
-            <div class="formula orange">С = А минус В, чистого времени<span class="c">32 400 минус 7 200 = 25 200 секунд,
-              то есть ровно 7 часов работы</span></div>
+              личные нужды 2 по 10 мин, уборка 10 мин: 120 минут, или 7 200 секунд</span></div>
+            <div class="formula orange">С = А минус В, чистое время<span class="c">32 400 минус 7 200 = 25 200 секунд, ровно 7 часов</span></div>
             <div class="formula">D = задание на смену<span class="c">84 изделия «вал-шестерня»</span></div>
             <div class="formula green">Такт = С / D = 25 200 / 84 = 300 секунд</div>
             <div class="formula blue">Темп = 3600 / такт = 3600 / 300 = 12 изделий в час</div>
           </div>
           <div>
-            <div class="box"><div class="lab">Моя сетка смены</div>
-              <table>
-                <tbody>
-                  <tr><td><b>8:00-8:30</b></td><td>пересменка</td><td class="n">перерыв</td></tr>
-                  <tr><td><b>8:30-10:30</b></td><td>1-й и 2-й час</td><td class="n">24 шт</td></tr>
-                  <tr><td><b>10:30-10:40</b></td><td>личные нужды</td><td class="n">перерыв</td></tr>
-                  <tr><td><b>10:40-12:40</b></td><td>3-й и 4-й час</td><td class="n">24 шт</td></tr>
-                  <tr><td><b>12:40-13:40</b></td><td>обед</td><td class="n">перерыв</td></tr>
-                  <tr><td><b>13:40-15:40</b></td><td>5-й и 6-й час</td><td class="n">24 шт</td></tr>
-                  <tr><td><b>15:40-15:50</b></td><td>личные нужды</td><td class="n">перерыв</td></tr>
-                  <tr><td><b>15:50-16:50</b></td><td>7-й час</td><td class="n">12 шт</td></tr>
-                </tbody>
-              </table></div>
-            <div class="box red" style="margin-top:12px"><div class="lab">На чём ошибался</div>
-              <div class="sub">Считал перерывами всё подряд, включая ожидание наладчика.
-                Фонд времени вышел меньше, такт больше, и план в бланке был занижен.
-                <b>Считаем только регламентированные перерывы</b>, во время которых работа останавливается по правилам.</div></div>
+            <div class="box red"><div class="lab">На чём спотыкаются участники</div>
+              <ul class="dot red">
+                <li><b>Считают перерывами всё подряд,</b> включая ожидание наладчика. Фонд времени меньше,
+                  такт больше, план занижен.</li>
+                <li><b>Берут численность вместо объёма</b> и путают такт с нормой.</li>
+                <li><b>Считают в разных единицах:</b> темп в час, а такт в минутах.</li>
+              </ul></div>
+            <div class="aside blue r2" style="margin-top:14px">
+              считаем только регламентированные перерывы, во время которых работа останавливается по правилам
+            </div>
           </div>
         </div>
-        <div class="notes"><b>Единица учёта.</b> Если действия повторяются при обработке партии из 10 штук,
-          считаем партию, а не штуку. Я однажды считал поштучно там, где цикл партией, - бланк стал нечитаемым.<br>
-          <b>Проверка.</b> Сложите семь часов работы и два часа перерывов. Если не сходится с длительностью смены, ошиблись.</div>
+        <div class="notes"><b>Как показываю.</b> Считаю на доске вместе с группой, вслух, не пропуская шагов.
+          Никаких готовых чисел на слайде: люди должны видеть, откуда взялись 25 200 секунд.<br>
+          <b>Единица учёта.</b> Если действия повторяются при обработке партии из 10 штук, считаем партию.
+          Обязательно проговорите это - дальше участники будут считать свою номенклатуру.</div>
       </section>
 
-      <!-- ============ 7 ============ -->
-      <section class="slide" data-title="Такт или цикл" data-num="7">
-        <div class="hd"><div class="kick">Шаг 4 из семи: такт или цикл</div><h2>Такт или цикл - вот в чём вопрос</h2>
-          <p class="lede" style="font-size:19px">Такт посчитали. Теперь замерили, сколько операция длится на самом деле,
-            и сравнили. Разница до 5 процентов - ерунда, больше - надо разбираться.</p></div>
-        <div class="box" style="margin-bottom:12px">
+      <!-- ============ 8 ============ -->
+      <section class="slide" data-title="Блок 5. Упражнение 1" data-num="8">
+        <div class="hd"><div class="kick">Блок 5, 15 минут</div><h2>Упражнение первое: считаем свою смену</h2>
+          <p class="lede" style="font-size:18px">Первый раз люди считают такт сами. Это и есть момент,
+            когда семинар перестаёт быть лекцией.</p></div>
+        <div class="grid g2">
+          <div class="box blue"><div class="lab">Как даю задание</div>
+            <ol class="num">
+              <li><b>Группы по три-четыре человека,</b> лучше из разных участков.</li>
+              <li><b>Задание:</b> взять свою смену и своё изделие, посчитать А, В, С, D и такт.</li>
+              <li><b>На всё 15 минут.</b> Секундомер на проекторе: чтобы торопились.</li>
+              <li><b>От каждой группы -</b> одна цифра такта на доске и одна фраза, что удивило.</li>
+            </ol></div>
+          <div>
+            <div class="box green"><div class="lab">Как проверяю</div>
+              <ul class="dot green">
+                <li><b>Складываю перерывы и часы работы:</b> должно получиться ровно длительность смены.</li>
+                <li><b>Смотрю единицы:</b> темп в час - значит такт в секундах.</li>
+                <li><b>Спрашиваю: кто из вас понял, что его план был занижен?</b> Обычно поднимают руки две трети.</li>
+              </ul></div>
+            <div class="aside red r1" style="margin-top:14px">
+              <svg viewBox="0 0 60 34" width="60" height="34"><path d="M4 30 C 16 24, 34 16, 50 6" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/><path d="M38 6 L50 6 L50 18" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/></svg>
+              не исправляйте ошибки в группах сразу - дайте им дойти до своей цифры
+            </div>
+          </div>
+        </div>
+        <div class="notes"><b>Что делать, если группа ошиблась.</b> Не поправляйте сразу.
+          Попросите вторую группу посчитать те же исходные. Разница в цифрах - лучший повод разобрать ошибку.<br>
+          <b>Если спорят про перерывы.</b> Это нормальный спор, ради него упражнение и нужно.
+          Решающее правило: считаем только то, что остановливает работу по регламенту.</div>
+      </section>
+
+      <!-- ============ 9 ============ -->
+      <section class="slide" data-title="Блок 6. Такт и цикл" data-num="9">
+        <div class="hd"><div class="kick">Блок 6, 10 минут</div><h2>Такт и цикл: три случая</h2>
+          <p class="lede" style="font-size:18px">Замеряем, сколько операция длится на самом деле, и сравниваем с тактом.
+            Разница до 5 процентов - ерунда, больше - работаем.</p></div>
+        <div class="box" style="flex:none;margin-bottom:14px">
           <svg viewBox="0 0 1180 240" width="100%" height="196"><path d="M948.1 62.1 L984.7 61.7 L1020.8 61.8 L1021.2 98.0 L1020.5 135.0 L984.7 134.3 L949.7 135.0 L947.8 98.0 L948.1 62.1 Z" fill="#2f9e44" fill-opacity=".13" stroke="#2f9e44" stroke-width="2"/>
 <text x="984.7" y="50.0" font-family="PT Sans, Arial, sans-serif" font-size="14" fill="#2f9e44" text-anchor="middle">коридор 5 процентов</text>
 <path d="M268.1 76.7 L626.3 77.0 L986.1 79.1 L985.8 98.0 L983.6 117.7 L626.3 118.3 L269.3 116.6 L268.8 98.0 L268.1 76.7 Z" fill="#1c5fa8" fill-opacity="0.30" stroke="#1c5fa8" stroke-width="2.4" stroke-linejoin="round"/>
@@ -507,102 +546,63 @@
         <div class="grid g3">
           <div class="box green"><div class="lab">Цикл примерно равен такту</div>
             <div class="sub">Разница в пределах 5 процентов. <b>В план ставим такт.</b>
-              Работаем над тем, чтобы процесс был стабильным, а не над скоростью.</div></div>
+              Работаем над стабильностью процесса.</div></div>
           <div class="box red"><div class="lab">Цикл больше такта</div>
-            <div class="sub"><b>Это узкое место.</b> Разбираю операцию по элементам, ищу, где теряются секунды,
-              снижаю цикл. Пока не стабилизировал, план считаю по циклу.</div></div>
+            <div class="sub"><b>Узкое место.</b> Разбираем операцию по элементам, ищем потерянные секунды.
+              Пока не стабилизировали, план считаем по циклу.</div></div>
           <div class="box orange"><div class="lab">Цикл меньше такта</div>
-            <div class="sub"><b>Люди и станки недогружены.</b> План считаю по циклу и занимаюсь организацией:
-              совмещение операций, перестановка, загрузка.</div></div>
+            <div class="sub"><b>Недогрузка.</b> План считаем по циклу и занимаемся организацией:
+              совмещение операций, перестановка.</div></div>
         </div>
-        <div class="notes"><b>Почему 5 процентов.</b> Меньше - это нормальные колебания замера, гоняться за ними бессмысленно.
-          Больше - сигнал, что операция не успевает за спросом.<br>
-          <b>Что делаю у себя.</b> Цикл 316 секунд при такте 300 - станок 14 не успевает.
-          Разобрал операцию по элементам: 11 секунд уходило на поиск заготовки и 5 на лишний проход.
-          Это и есть то, что надо убирать.</div>
-      </section>
-
-      <!-- ============ 8 ============ -->
-      <section class="slide" data-title="Какой бланк" data-num="8">
-        <div class="hd"><div class="kick">Шаг 5 из семи: какой бланк взять</div><h2>Какой бланк взять</h2>
-          <p class="lede" style="font-size:19px">Темп производства - величина, обратная такту.
-            От темпа и зависит, какой бланк мне нужен.</p></div>
-        <div class="grid g2" style="flex:none;margin-bottom:12px">
-          <div class="formula blue">Темп = 3600 / 300 = 12 изделий в час<span class="c">считаем в сопоставимых единицах:
-            темп в час - значит и такт в секундах</span></div>
-          <div class="formula orange">Темп по циклу = 3600 / 316 = 11,4 изделия в час<span class="c">на период стабилизации
-            план считаю по циклу, пока не снижу его до такта</span></div>
-        </div>
-        <div class="grid g5">
-          <div class="box blue"><div class="lab">Вариант 1</div>
-            <div class="sub"><b>Больше штуки в час, по такту.</b> Работа повторяется. Мой основной бланк.</div></div>
-          <div class="box orange"><div class="lab">Вариант 2</div>
-            <div class="sub"><b>Больше штуки в час, по мощности.</b> Для лимитирующих участков:
-              план от мощности станка по нормативу или по лучшему достигнутому.</div></div>
-          <div class="box green"><div class="lab">Вариант 3</div>
-            <div class="sub"><b>Несколько изделий на одном месте.</b> По каждому своё время и объём,
-              плюс время переналадки.</div></div>
-          <div class="box red"><div class="lab">Вариант 4</div>
-            <div class="sub"><b>Меньше штуки в час.</b> Цикл длинный: задание делю на элементы,
-              по каждому план и факт начала и конца.</div></div>
-          <div class="box"><div class="lab">Вариант 5</div>
-            <div class="sub"><b>Меньше штуки в смену.</b> Цикл длиннее смены: бланк по элементам
-              с планом и фактом по каждой операции.</div></div>
-        </div>
-        <div class="box" style="margin-top:12px;flex:none"><div class="sub" style="font-size:18px">
-          Нужен брак, расход или число людей - добавляю столбец. <b>Бланк подстраиваю под участок,
-          а не участок под бланк.</b> У меня темп 12 штук в час, поэтому взял первый вариант.</div></div>
-        <div class="notes"><b>Главное.</b> Сначала темп, потом бланк. Я один раз выбрал бланк «покрасивее»,
-          и он не подошёл под темп: в час попадало по три операции, писать было некуда.<br>
-          <b>Про мощность.</b> Достигнутую мощность беру из статистики максимум за полгода.
-          Если архива нет, сажусь с секундомером на пару дней.</div>
-      </section>
-
-      <!-- ============ 9 ============ -->
-      <section class="slide" data-title="Из чего бланк" data-num="9">
-        <div class="hd"><div class="kick">Как выглядит бланк</div><h2>Из чего бланк: шапка, строки, графы</h2></div>
-        <div class="grid g2">
-          <div class="box blue"><div class="lab">Шапка</div>
-            <ul class="dot blue">
-              <li><b>Что делаем, участок, кто работает, дата, смена.</b></li>
-              <li><b>Время такта</b> - то самое целевое время на единицу.</li>
-              <li><b>Темп и задание на смену.</b> У меня: 12 штук в час, 84 штуки за смену.</li>
-            </ul></div>
-          <div class="box orange"><div class="lab">Строки и графы</div>
-            <ul class="dot">
-              <li><b>Одна строка - один час работы.</b> Сколько часов работаем, столько строк.</li>
-              <li><b>В графе «план»:</b> объём за час и накопительным итогом - ниже или сбоку.</li>
-              <li><b>Дальше по графам:</b> факт, отклонение, простой в минутах, причина, кто отвечает, что сделали.</li>
-              <li><b>Отклонения нет - ставлю галочку.</b> Значит, ячейка не пропущена, а час был нормальный.</li>
-            </ul></div>
-          <div class="box green" style="grid-column:1 / -1"><div class="lab">Что обязано быть в бланке, на чём бы его ни вели</div>
-            <div class="grid g3" style="margin-top:6px">
-              <div class="sub"><b>1. Факт</b> за каждый час и накопительным итогом.</div>
-              <div class="sub"><b>2. Отклонение</b> факт минус план за каждый час и накопительно.</div>
-              <div class="sub"><b>3. Причина,</b> если отклонились. Обязательно.</div>
-            </div>
-            <div class="sub" style="margin-top:10px;font-size:18px">
-              Нет третьего пункта - нет и анализа. Бланк с цифрами, но без причин, я не считаю ведущимся.</div></div>
-        </div>
-        <div class="notes"><b>Деталь, которую все путают.</b> Накопительный итог нужен в каждой ячейке,
-          а не только в строке «итого». По нему и видно, догоняет смена план или отстаёт всё сильнее.<br>
-          <b>Галочка вместо нуля.</b> Экономит время оператора и сразу показывает: ячейку видели, час был нормальный.</div>
+        <div class="notes"><b>Почему 5 процентов.</b> Меньше - нормальные колебания замера. Больше - сигнал.<br>
+          <b>Приём для семинара.</b> Возьмите телефон, замерьте вслух одну операцию в зале - например,
+          сколько секунд занимает раздать раздатки. Сравните с «тактом». Люди видят принцип на ерундовом примере
+          и переносят на свой станок.<br>
+          <b>Цифры примера.</b> Такт 300 секунд, цикл по хронометражу 316. Это узкое место.</div>
       </section>
 
       <!-- ============ 10 ============ -->
-      <section class="slide" data-title="Одна смена целиком" data-num="10">
-        <div class="hd" style="position:relative"><div class="kick">Одна смена целиком</div>
-          <h2>Вот как это выглядит в жизни</h2>
-          <p class="lede" style="font-size:18px">Скриншот файла, который я веду уже полгода.
-            Смена 14 октября, станок 14.</p></div>
-        <div style="flex:1;min-height:0;display:flex;flex-direction:column;position:relative">
+      <section class="slide" data-title="Блок 7. Бланк" data-num="10">
+        <div class="hd"><div class="kick">Блок 7, 15 минут</div><h2>Бланк: что в нём обязательно</h2>
+          <p class="lede" style="font-size:18px">Раздаю образец (раздатка 1) и объясняю по нему.
+            Слайд не нужен - нужен бланк в руках.</p></div>
+        <div class="grid g2">
+          <div class="box blue"><div class="lab">Шапка и строки</div>
+            <ul class="dot blue">
+              <li><b>Шапка:</b> что делаем, участок, исполнитель, дата, смена, время такта, темп и задание.</li>
+              <li><b>Одна строка - один час работы.</b> Сколько часов работаем, столько строк.</li>
+              <li><b>В графе «план»:</b> объём за час и накопительным итогом.</li>
+            </ul></div>
+          <div class="box orange"><div class="lab">Графы</div>
+            <ul class="dot">
+              <li><b>Обязательные:</b> факт, отклонение, простой в минутах, причина, кто отвечает, что сделали.</li>
+              <li><b>Отклонения нет - ставим галочку.</b> Значит, час нормальный, ячейку не пропустили.</li>
+              <li><b>Нужны брак или расход -</b> добавляем столбец.</li>
+            </ul></div>
+          <div class="box green" style="grid-column:1 / -1"><div class="lab">Что обязано быть в бланке, на чём бы его ни вели</div>
+            <div class="grid g3" style="margin-top:4px">
+              <div class="sub"><b>1. Факт</b> за каждый час и накопительным итогом</div>
+              <div class="sub"><b>2. Отклонение</b> за каждый час и накопительно</div>
+              <div class="sub"><b>3. Причина</b> каждого отклонения. Без этого бланк не считается ведущимся</div>
+            </div></div>
+        </div>
+        <div class="aside red r2" style="margin-top:12px">покажите на образце, где стоит галочка, а где причина: это экономит десять минут вопросов</div>
+        <div class="notes"><b>Как объясняю накопительный итог.</b> Беру образец, закрываю рукой все строки
+          кроме одной и спрашиваю: «Смена идёт нормально?» Ответ «да». Открываю накопительное отклонение -
+          там минус восемь. Это и есть момент, когдавсе понимают, зачем итог.<br>
+          <b>Частый вопрос.</b> «А можно вести в Excel?» Можно, хоть в MES. Требования к содержанию одни.</div>
+      </section>
+
+      <!-- ============ 11 ============ -->
+      <section class="slide" data-title="Раздатка 1. Образец" data-num="11">
+        <div class="hd"><div class="kick">Раздаточный материал 1</div><h2>Образец: смена целиком</h2>
+          <p class="lede" style="font-size:18px">Этот же лист раздаю участникам. Смена 14 октября, станок 14.</p></div>
+        <div class="grid g23">
           <div class="xl">
-            <div class="bar"><b>Смена_14.10.xlsx</b><span>режим совместимости</span><span style="margin-left:auto">сохранено 14.10 17:05</span></div>
+            <div class="bar"><b>Смена_14.10.xlsx</b><span>режим совместимости</span></div>
             <div class="fx">fx<span>=C11-B11</span></div>
             <table>
-              <thead><tr>
-                <th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th>
-              </tr></thead>
+              <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr></thead>
               <tbody>
                 <tr><td class="hd">1</td><td class="ttl" colspan="8">Производственный анализ. Участок механообработки, станок 14, изделие вал-шестерня</td></tr>
                 <tr><td class="hd">2</td><td colspan="8">Смена 8:00-17:00. Такт 300 с, темп 12 шт/ч, задание 84 шт. Оператор Смирнов</td></tr>
@@ -631,28 +631,69 @@
                   <td class="tot">Выполнение 83,3 процента</td></tr>
               </tbody>
             </table>
+            <div class="tabs"><span>Смена_14.10</span></div>
           </div>
-          <div style="margin-top:4px"><span class="xl tab">Смена_14.10</span></div>
-          <div class="note-pos red" style="right:6px;top:96px;transform:rotate(-4deg)">заготовки кончились,<br>а никто не знал</div>
-          <svg class="arw" style="right:196px;top:118px;width:80px;height:56px;transform:rotate(-160deg)" viewBox="0 0 80 56">
-            <path d="M3 6 C 18 26, 46 36, 64 50" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/>
-            <path d="M50 50 L64 50 L64 36" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/></svg>
-          <div class="note-pos blue" style="right:20px;bottom:14px;transform:rotate(2deg)">72 минуты простоя при цикле 316 секунд -<br>это те же 14 штук. Сошлось.</div>
+          <div>
+            <div class="aside red r1">
+              <svg viewBox="0 0 60 30" width="60" height="30"><path d="M56 4 C 42 10, 22 18, 6 26" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/><path d="M18 26 L6 26 L6 14" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/></svg>
+              заготовки кончились, а никто не знал - спросите: чья это причина?
+          </div>
+            <div class="aside blue r2">
+              <svg viewBox="0 0 60 30" width="60" height="30"><path d="M56 4 C 42 10, 22 18, 6 26" fill="none" stroke="#1c5fa8" stroke-width="2.4" stroke-linecap="round"/><path d="M18 26 L6 26 L6 14" fill="none" stroke="#1c5fa8" stroke-width="2.4" stroke-linecap="round"/></svg>
+              72 минуты простоя при цикле 316 секунд - это те же 14 штук. Сходится: других потерь нет
+            </div>
+            <div class="aside green r1">
+              накопительное отклонение растёт: 3, 8, 8, 10, 14. Час в норме уже ничего не отыгрывает
+            </div>
+          </div>
         </div>
-        <div class="notes"><b>Что я здесь вижу.</b> Два часа идём по плану, потом три причины подряд,
-          и за оставшееся время отставание уже не отыгрывается: минус 3, минус 8, минус 10, минус 14.<br>
-          <b>Проверка на честность.</b> 72 минуты простоя по 316 секунд на изделие - получается 13,7 штуки.
-          Отклонение 14 штук. Значит, других потерь в смене не было, причины записаны полностью.<br>
-          <b>Вопрос в зал.</b> Что должен сделать мастер в 12:40, когда четвёртый час подряд в минусе?</div>
+        <div class="notes"><b>Как раздаю.</b> По листу на человека, не на группу. Пусть пишут на нём прямо на семинаре.<br>
+          <b>Вопрос, который задаю:</b> «Что должен был сделать мастер в 12:40, когда четвёртый час подряд в минусе?»
+          Ответы обычно правильные, но никто этого не делает - потому что нет правила.<br>
+          <b>Проверка на честность.</b> 72 минуты по 316 секунд - 13,7 штуки. Отклонение 14 штук. Потери объяснены полностью.</div>
       </section>
 
-      <!-- ============ 11 ============ -->
-      <section class="slide" data-title="Как читать бланк" data-num="11">
-        <div class="hd" style="position:relative"><div class="kick">Читаем бланк</div>
-          <h2>Как я читаю этот бланк</h2></div>
-        <div class="grid" style="grid-template-columns:1fr 360px;gap:16px">
-          <div class="box"><div class="lab" style="font-size:19px">План и факт по часам, штук</div>
-            <svg viewBox="0 0 1180 300" width="100%" height="248" style="margin-top:4px"><path d="M79.6 250.3 L258.1 250.0 L437.3 250.4 L614.3 249.3 L793.1 249.7 L971.1 249.5 L1149.6 249.9" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
+      <!-- ============ 12 ============ -->
+      <section class="slide" data-title="Блок 8. Упражнение 2" data-num="12">
+        <div class="hd"><div class="kick">Блок 8, 25 минут</div><h2>Упражнение второе: заполняем смену</h2>
+          <p class="lede" style="font-size:18px">Главное упражнение семинара. Если оно прошло - семинар удался.</p></div>
+        <div class="grid g2">
+          <div class="box blue"><div class="lab">Как ставлю задачу</div>
+            <ol class="num">
+              <li><b>Раздаю чистые бланки</b> и листок с исходными: смена, перерывы, задание, замер цикла,
+                факт по часам с пробелами.</li>
+              <li><b>Задача:</b> посчитать такт, заполнить план, вписать факт, посчитать отклонение
+                и <b>придумать причину</b> каждой остановки.</li>
+              <li><b>25 минут.</b> Через 15 минут предупреждаю: осталось десять.</li>
+              <li><b>Защита:</b> пять минут от группы. Только цифры и причины.</li>
+            </ol></div>
+          <div>
+            <div class="box green"><div class="lab">Как оцениваю</div>
+              <ul class="dot green">
+                <li>Время посчитано только по регламентированным перерывам</li>
+                <li>Такт и темп согласованы, единица учёта выбрана по циклу</li>
+                <li>В каждой ячейке есть накопительный итог, где всё нормально - галочка</li>
+                <li><b>У каждого отклонения есть причина, ответственный и мера</b></li>
+              </ul></div>
+            <div class="aside red r2" style="margin-top:12px">
+              <svg viewBox="0 0 60 34" width="60" height="34"><path d="M4 30 C 16 24, 34 16, 50 6" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/><path d="M38 6 L50 6 L50 18" fill="none" stroke="#c92a2a" stroke-width="2.4" stroke-linecap="round"/></svg>
+              дайте разные исходные разным группам, иначе они просто спишут друг у друга
+            </div>
+          </div>
+        </div>
+        <div class="notes"><b>Почему «придумать причину».</b> Это развилка: если группа пишет «простой 15 минут»
+          и пустую графу причины - значит, правило не дошло. Разбирайте именно такие бланки.<br>
+          <b>Что делать с группами, которые закончили раньше.</b> Попросите посчитать,
+          сколько изделий стоит 72 минуты простоя при их цикле. Они сами найдут, что потери объяснены не полностью.</div>
+      </section>
+
+      <!-- ============ 13 ============ -->
+      <section class="slide" data-title="Блок 9. Разбор" data-num="13">
+        <div class="hd"><div class="kick">Блок 9, 20 минут</div><h2>Разбор у доски: как читать бланк</h2></div>
+        <div class="grid g23">
+          <div>
+            <div class="box" style="margin-bottom:12px"><div class="lab">План и факт по часам, штук</div>
+              <svg viewBox="0 0 1180 300" width="100%" height="230" style="margin-top:2px"><path d="M79.6 250.3 L258.1 250.0 L437.3 250.4 L614.3 249.3 L793.1 249.7 L971.1 249.5 L1149.6 249.9" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="68.0" y="255.0" font-family="PT Mono, Consolas, monospace" font-size="15" fill="#aeb6bf" text-anchor="end">0</text>
 <path d="M79.6 193.0 L259.0 192.2 L436.5 192.6 L614.1 192.4 L793.8 193.8 L971.4 192.4 L1149.7 193.0" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="68.0" y="197.9" font-family="PT Mono, Consolas, monospace" font-size="15" fill="#aeb6bf" text-anchor="end">4</text>
@@ -705,16 +746,8 @@
 <text x="990.0" y="30.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#22282e" text-anchor="start">план</text>
 <rect x="1050" y="18" width="20" height="13" fill="#c92a2a" fill-opacity=".35" stroke="#c92a2a" stroke-width="2"/>
 <text x="1080.0" y="30.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#22282e" text-anchor="start">факт</text></svg></div>
-          <div class="box red"><div class="lab">Что тут видно</div>
-            <ul class="dot red">
-              <li><b>Провал в 3-м и 4-м часу.</b> Две причины подряд, и до обеда смена уже не в графике.</li>
-              <li><b>5-й час нормальный, а план не догнан.</b> Час по плану не отыгрывает накопленное отставание.</li>
-              <li><b>Накопительное отклонение только растёт:</b> 3, 8, 8, 10, 14.</li>
-              <li><b>72 минуты простоя</b> - это те же 14 штук. Других потерь нет.</li>
-            </ul></div>
-        </div>
-        <div class="box" style="margin-top:12px"><div class="lab" style="font-size:19px">Накопительный итог, штук</div>
-          <svg viewBox="0 0 1180 190" width="100%" height="152"><path d="M80.4 150.6 L259.3 149.5 L436.0 149.5 L614.9 150.7 L793.2 150.7 L972.1 149.2 L1149.5 149.6" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
+            <div class="box"><div class="lab">Накопительный итог, штук</div>
+              <svg viewBox="0 0 1180 190" width="100%" height="140" style="margin-top:2px"><path d="M80.4 150.6 L259.3 149.5 L436.0 149.5 L614.9 150.7 L793.2 150.7 L972.1 149.2 L1149.5 149.6" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="68.0" y="155.0" font-family="PT Mono, Consolas, monospace" font-size="14" fill="#aeb6bf" text-anchor="end">0</text>
 <path d="M80.5 89.4 L258.1 90.4 L435.9 90.9 L615.9 89.6 L793.6 89.8 L971.5 90.1 L1149.7 90.0" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="68.0" y="95.0" font-family="PT Mono, Consolas, monospace" font-size="14" fill="#aeb6bf" text-anchor="end">45</text>
@@ -735,75 +768,79 @@
 <text x="1194.0" y="53.3" font-family="PT Sans, Arial, sans-serif" font-size="16" fill="#c92a2a" text-anchor="start">минус 14 штук</text>
 <path d="M80.1 150.7 L212.5 148.6 L347.1 148.9 L480.1 149.9 L615.0 151.3 L749.3 150.7 L882.4 151.4 L1015.9 150.0 L1150.6 149.4" fill="none" stroke="#22282e" stroke-width="2"/>
 <text x="80.0" y="178.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#aeb6bf" text-anchor="start">штук накопительным итогом</text></svg></div>
-        <div class="notes"><b>Почему смотрю накопительно.</b> Отдельный час может быть в норме, а смена уже в минусе.
-          И наоборот: час провален, но отставание ещё отыгрывается.<br>
-          <b>Моё правило.</b> Как только накопительное отклонение перевалило за час работы, нужна временная мера:
-          переставить людей, вызвать наладчика, предупредить следующую смену.</div>
-      </section>
-
-      <!-- ============ 12 ============ -->
-      <section class="slide" data-title="Запускаем" data-num="12">
-        <div class="hd" style="position:relative"><div class="kick">Шаг 6 из семи: запускаем</div><h2>Как я запускал</h2></div>
-        <div class="grid g2" style="margin-bottom:12px">
-          <div class="box blue"><div class="lab">Что написал в приказе</div>
-            <ul class="dot blue">
-              <li><b>Точки контроля:</b> где ведём.</li>
-              <li><b>Ответственные</b> за организацию.</li>
-              <li><b>Как часто</b> заполняем и кто это проверяет.</li>
-              <li><b>Кто решает</b> при отклонении.</li>
-              <li><b>Кто отвечает за всё</b> и когда докладывает руководству.</li>
-            </ul></div>
-          <div class="box orange"><div class="lab">Порядок, который сработал</div>
-            <ol class="num">
-              <li><b>Приказ и распоряжение</b> о назначении ответственных.</li>
-              <li><b>Обучил людей.</b> Полчаса на смене, показал на реальном бланке.</li>
-              <li><b>Разложил всё нужное:</b> бланки, папки, маркеры, доску.</li>
-              <li><b>Неделю ходил рядом.</b> Пока сам не убедился, что бланки заполняют честно, не запускал.</li>
-            </ol></div>
+          </div>
+          <div>
+            <div class="box red"><div class="lab">Вопросы в зал</div>
+              <ul class="dot red">
+                <li><b>Почему 5-й час нормальный, а смена всё равно в минусе?</b></li>
+                <li><b>Сколько стоит 72 минуты простоя?</b> Считаем вслух: 13,7 штуки.</li>
+                <li><b>Что должен сделать мастер,</b> когда накопленное отставание перевалило за час работы?</li>
+                <li><b>Почему отдельный час ни о чём не говорит</b> без накопительного итога?</li>
+              </ul></div>
+            <div class="aside blue r1" style="margin-top:14px">
+              ответ, который жду: час по плану не отыгрывает накопленное отставание
+            </div>
+          </div>
         </div>
-        <div class="box"><div class="lab">Кто за что отвечает</div>
-          <table>
-            <thead><tr><th style="width:16%">Роль</th><th style="width:50%">Что делает</th><th style="width:34%">У меня это</th></tr></thead>
-            <tbody>
-              <tr><td><b>Обеспечение</b></td><td>Бланки, ручки, доска, компьютер, место для хранения</td><td>Мастер участка, снабжение</td></tr>
-              <tr><td><b>Ведение</b></td><td>Пишет факт в течение часа</td><td>Оператор</td></tr>
-              <tr><td><b>Анализ</b></td><td>Проверяет, что записано честно, сводит в журнал, делает отчёт по причинам</td><td>Мастер участка</td></tr>
-              <tr><td><b>Решения</b></td><td>Принимает меры сразу, что не по силам - отдаёт наверх</td><td>Мастер участка</td></tr>
-              <tr><td><b>Лидер</b></td><td>Смотрит топ причин за период, даёт задание на коренные причины</td><td>Начальник цеха</td></tr>
-            </tbody>
-          </table></div>
-        <div class="note-pos red" style="right:44px;top:236px;transform:rotate(-3deg)">неделю ходил рядом -<br>иначе бросят через месяц</div>
-        <div class="notes"><b>Без приказа не работает.</b> Пока точки и ответственные не закреплены документом,
-          бланк заполняют по настроению и бросают при первой загрузке.<br>
-          <b>Роль лидера.</b> Начальник цеха смотрит не каждый час, а топ причин за неделю.
-          Его задача - дать задание на коренные причины, а не разбирать каждое отклонение самому.</div>
+        <div class="notes"><b>Как веду разбор.</b> Не рассказываю сам. Задаю вопрос, держу паузу,
+          добиваюсь ответа от участников. Моя задача - чтобы они сами произнесли правильную фразу.<br>
+          <b>Типичная ошибка участников.</b> Смотрят на отдельный час и делают вывод по нему.
+          Возвращайте их к накопительному итогу - это главный навык чтения бланка.</div>
       </section>
 
-      <!-- ============ 13 ============ -->
-      <section class="slide" data-title="От записей к статистике" data-num="13">
-        <div class="hd"><div class="kick">Разбираем</div><h2>От отдельных записей к статистике</h2>
-          <p class="lede" style="font-size:19px">Один бланк - это случай. Месяц бланков - это уже картина,
-            по которой можно выбирать, что чинить первым.</p></div>
-        <div class="grid g2">
-          <div class="box blue"><div class="lab">Что делаю в конце смены</div>
+      <!-- ============ 14 ============ -->
+      <section class="slide" data-title="Блок 10. Запуск" data-num="14">
+        <div class="hd"><div class="kick">Блок 10, 15 минут</div><h2>Как запустить у себя: приказ и ответственные</h2>
+          <p class="lede" style="font-size:18px">Раздатка 2: образец приказа и распоряжения.
+            Без документа бланк заполняют по настроению.</p></div>
+        <div class="grid g32">
+          <div class="box blue"><div class="lab">Что пишем в приказе</div>
             <ul class="dot blue">
-              <li><b>Переношу в журнал:</b> сколько простояли и почему.</li>
-              <li><b>Свожу причины в группы.</b> Пока их сорок, приоритета нет.</li>
-              <li><b>Раз в неделю сажусь со своими</b> и разбираю сводку. Первые три месяца - обязательно раз в семь дней.</li>
-              <li><b>Две-три причины, которые больше всех насобирали,</b> оформляю как задачу и веду до конца.</li>
+              <li><b>Точки контроля</b> - где ведём</li>
+              <li><b>Ответственные</b> за организацию</li>
+              <li><b>Как часто</b> заполняем и кто проверяет</li>
+              <li><b>Кто решает</b> при отклонении</li>
+              <li><b>Кто отвечает за всё</b> и когда докладывает</li>
             </ul></div>
-          <div class="box orange"><div class="lab">Шесть полок, по которым раскладываю причины</div>
-            <div class="grid g2" style="margin-top:4px">
+          <div class="box"><div class="lab">Кто за что отвечает</div>
+            <table>
+              <thead><tr><th>Роль</th><th>Что делает</th></tr></thead>
+              <tbody>
+                <tr><td><b>Обеспечение</b></td><td>Бланки, ручки, доска, компьютер, место хранения</td></tr>
+                <tr><td><b>Ведение</b></td><td>Пишет факт в течение часа. Это оператор</td></tr>
+                <tr><td><b>Анализ</b></td><td>Проверяет честность записей, сводит в журнал, отчёт по причинам</td></tr>
+                <tr><td><b>Решения</b></td><td>Меры принимает сразу, что не по силам - отдаёт наверх</td></tr>
+                <tr><td><b>Лидер</b></td><td>Смотрит топ причин за период, даёт задание на корень</td></tr>
+              </tbody>
+            </table></div>
+        </div>
+        <div class="aside red r2" style="margin-top:12px">порядок, который работает: приказ, обучение, неделю ходите рядом - и только потом запуск</div>
+        <div class="notes"><b>Что говорю участникам.</b> «Заполнение, анализ и решения на этапе запуска
+          проводите вместе со специалистом по бережливому производству - то есть с вами. Неделю ходите рядом,
+          иначе через месяц бланки забросят».<br>
+          <b>Частое возражение.</b> «У нас людей не хватает, некому заполнять».
+          Ответ: ведёт оператор, это две минуты в час. Если двух минут нет - у нас проблема побольше, чем бланк.</div>
+      </section>
+
+      <!-- ============ 15 ============ -->
+      <section class="slide" data-title="Блок 11. Причины" data-num="15">
+        <div class="hd"><div class="kick">Блок 11, 15 минут</div><h2>Группы причин и приоритет</h2>
+          <p class="lede" style="font-size:18px">Один бланк - случай. Месяц бланков - картина,
+            по которой выбираем, что чинить первым.</p></div>
+        <div class="grid g32">
+          <div class="box orange"><div class="lab">Шесть полок для причин</div>
+            <div class="grid g2" style="margin-top:2px">
               <div class="sub"><b>1. Организация.</b> Человека нет, опоздал, не обучен</div>
               <div class="sub"><b>2. Техника.</b> Поломка, инструмент, нет воздуха</div>
               <div class="sub"><b>3. Поставки.</b> Нет заготовок, оснастки, расходников</div>
               <div class="sub"><b>4. Регламент.</b> Обслуживание, уборка, переналадка</div>
               <div class="sub"><b>5. Качество.</b> Брак, переделка, лишний контроль</div>
               <div class="sub"><b>6. Догоняем.</b> Когда перевыполнили и добирают</div>
-            </div></div>
-        </div>
-        <div class="box" style="margin-top:12px"><div class="lab" style="font-size:19px">Мой отчёт за месяц: причины простоев и накопленный итог</div>
-          <svg viewBox="0 0 1180 320" width="100%" height="244" style="margin-top:2px"><path d="M90.4 250.1 L258.9 250.7 L427.0 250.4 L595.6 249.2 L762.4 249.7 L932.5 249.3 L1099.7 249.9" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
+            </div>
+            <div class="sub" style="margin-top:8px"><b>Задание группам:</b> разложить причины из своего упражнения
+              по этим шести полкам и сказать, какая полка тяжелее.</div></div>
+          <div class="box"><div class="lab">Отчёт за месяц: причины и накопленный итог</div>
+            <svg viewBox="0 0 1180 320" width="100%" height="272" style="margin-top:2px"><path d="M90.4 250.1 L258.9 250.7 L427.0 250.4 L595.6 249.2 L762.4 249.7 L932.5 249.3 L1099.7 249.9" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="76.0" y="255.0" font-family="PT Mono, Consolas, monospace" font-size="15" fill="#aeb6bf" text-anchor="end">0</text>
 <path d="M90.0 154.9 L257.6 155.3 L427.6 154.9 L595.6 155.9 L763.6 154.5 L930.8 154.3 L1100.0 155.4" fill="none" stroke="#e9ecef" stroke-width="1.2"/>
 <text x="76.0" y="160.0" font-family="PT Mono, Consolas, monospace" font-size="15" fill="#aeb6bf" text-anchor="end">20</text>
@@ -843,61 +880,56 @@
 <path d="M90.7 250.1 L215.1 249.7 L343.6 251.0 L469.9 250.1 L594.0 251.4 L720.9 249.3 L847.4 251.1 L974.6 249.1 L1100.1 249.9" fill="none" stroke="#22282e" stroke-width="2"/>
 <text x="90.0" y="28.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#aeb6bf" text-anchor="start">процентов времени простоев</text>
 <text x="1100.0" y="28.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#e8590c" text-anchor="end">накопленный итог</text></svg></div>
-        <div class="notes"><b>Зачем группировать.</b> Пока сорок причин, приоритета нет.
-          После группировки видно: две причины дают две трети всех потерь. С них и начинаем.<br>
-          <b>Правило семи дней.</b> Первые три месяца разбираем статистику не реже раза в неделю,
-          иначе темп теряется и бланки перестают заполнять.</div>
+        </div>
+        <div class="notes"><b>Правило семи дней.</b> Первые три месяца статистику разбирают не реже раза в неделю,
+          иначе темп теряется и бланки перестают заполнять.<br>
+          <b>Вывод для участников.</b> Две причины дают две трети потерь. Не беритесь за всё сразу:
+          возьмите две полки и доведите до конца.</div>
       </section>
 
-      <!-- ============ 14 ============ -->
-      <section class="slide" data-title="Доходим до корня" data-num="14">
-        <div class="hd"><div class="kick">Разбираем</div><h2>Доходим до корня</h2>
-          <p class="lede" style="font-size:19px">«Заготовки не подвезли» - это причина.
-          А почему их не подвезли - это уже корень. Работаем со вторым.</p></div>
-        <div class="grid g4" style="margin-bottom:14px">
-          <div class="box blue"><div class="lab">1. Собрать факты</div>
-            <div class="sub"><b>Что, где, когда, кто, как, сколько.</b> Без этого всё остальное - гадание.
-              Зову тех, кто в теме: наладчика, кладовщика, технолога.</div></div>
-          <div class="box orange"><div class="lab">2. Найти корень</div>
-            <div class="sub"><b>Пять почему, рыбья кость, дерево гипотез, мозговой штурм.</b>
-              Корней может быть несколько - убирать надо все.</div></div>
-          <div class="box green"><div class="lab">3. Выбрать решение</div>
-            <div class="sub"><b>Сначала накидали вариантов, потом выбрали</b> по деньгам, по частоте проблемы
-              и по требованиям безопасности.</div></div>
-          <div class="box red"><div class="lab">4. Сделать и удержать</div>
-            <div class="sub"><b>План: что, кто, когда.</b> Контроль - доска с задачами.
-              Проверка - снова по бланку ПА.</div></div>
-        </div>
+      <!-- ============ 16 ============ -->
+      <section class="slide" data-title="Блок 12. Коренная причина" data-num="16">
+        <div class="hd"><div class="kick">Блок 12, 20 минут</div><h2>Коренная причина: показываю на живом примере</h2>
+          <p class="lede" style="font-size:18px">«Заготовки не подвезли» - причина. «Почему их не подвезли» -
+            уже корень. Разбираю у доски, вопросы задаёт зал.</p></div>
         <div class="grid g2">
-          <div class="box"><div class="lab">Как это было у меня</div>
-            <ul class="dot">
-              <li><b>Причина:</b> заготовки не подвезли, 15 минут простоя.</li>
-              <li><b>Почему 1:</b> кладовщик не знал, что они кончаются.</li>
-              <li><b>Почему 2:</b> на линии нет сигнала, что осталось мало.</li>
-              <li><b>Почему 3:</b> мы не договорились, за сколько штук до конца он везёт следующую партию.</li>
-              <li><b>Корень:</b> нет правила пополнения. <b>Решение:</b> метка на стеллаже,
-                при достижении кладовщик везёт партию. Через месяц причина ушла из топ-3.</li>
-            </ul></div>
-          <div class="box green"><div class="lab">Как понял, что помогло</div>
+          <div class="box blue"><div class="lab">Как веду разбор</div>
+            <ol class="num">
+              <li><b>Собираем факты:</b> что, где, когда, кто, как, сколько.</li>
+              <li><b>Пять почему.</b> Каждый шаг пишу на доске, не перескакиваю.</li>
+              <li><b>Корней бывает несколько</b> - убирать надо все. Не останавливайтесь на первом.</li>
+              <li><b>Проверяем влияние:</b> убрали причину - отклонение ушло. Не ушло - ищем дальше.</li>
+            </ol></div>
+          <div class="box green"><div class="lab">Пример, который беру</div>
             <ul class="dot green">
-              <li><b>Проверяю по данным ПА.</b> Доля этой группы причин в сводке за месяц должна уменьшиться.</li>
-              <li><b>Не уменьшилась</b> - значит, убрали не корень, а симптом.</li>
-              <li><b>Уменьшилась</b> - закрепляю стандартом и рассказываю соседнему участку.</li>
+              <li><b>Причина:</b> заготовки не подвезли, 15 минут простоя</li>
+              <li><b>Почему 1:</b> кладовщик не знал, что они кончаются</li>
+              <li><b>Почему 2:</b> на линии нет сигнала, что осталось мало</li>
+              <li><b>Почему 3:</b> не договорились, за сколько штук до конца везти следующую партию</li>
+              <li><b>Корень:</b> нет правила пополнения. <b>Решение:</b> метка на стеллаже,
+                при её появлении кладовщик везёт партию</li>
             </ul></div>
         </div>
-        <div class="notes"><b>Разница уровней.</b> Причина отвечает на вопрос «что случилось»,
-          корень - «почему это стало возможным».<br>
-          <b>Проверка влияния.</b> Коренная причина - та, чьё влияние проверили и подтвердили.
-          Убрали её - отклонение ушло. Не ушло - ищем дальше.</div>
+        <div class="box orange" style="margin-top:12px;flex:none"><div class="lab">Инструменты, которые показываю</div>
+          <div class="grid g4" style="margin-top:2px">
+            <div class="sub"><b>Пять почему</b> - основной, быстрее всего доходит</div>
+            <div class="sub"><b>Рыбья кость</b> - когда причин много и они переплетены</div>
+            <div class="sub"><b>Дерево гипотез</b> - когда нужны проверки и цифры</div>
+            <div class="sub"><b>Мозговой штурм</b> - на этапе вариантов решения</div>
+          </div></div>
+        <div class="notes"><b>Ошибка, которую жду.</b> Кто-нибудь обязательно скажет «не подвезли, потому что кладовщик плохо работает».
+          Это момент для разговора про корень: не человек, а отсутствие правила.<br>
+          <b>После разбора.</b> План мероприятий: что, кто, когда. Контроль - доска задач.
+          Проверка - снова по бланку ПА: доля этой причины должна уменьшиться.</div>
       </section>
 
-      <!-- ============ 15 ============ -->
-      <section class="slide" data-title="Цепочка помощи" data-num="15">
-        <div class="hd"><div class="kick">Когда причина не в твоей власти</div><h2>Если причина не в моей власти</h2>
-          <p class="lede" style="font-size:19px">Оператор не должен бегать по кабинетам.
-          У него есть десять минут, чтобы получить помощь. Не получил - вопрос уходит выше.</p></div>
-        <div class="box" style="margin-bottom:12px">
-          <svg viewBox="0 0 1180 260" width="100%" height="212"><path d="M26.6 148.3 L126.0 148.0 L226.8 147.6 L226.1 194.0 L226.9 241.1 L126.0 241.5 L26.0 240.4 L27.2 194.0 L26.6 148.3 Z" fill="#1c5fa8" fill-opacity="0.22" stroke="#1c5fa8" stroke-width="2.4" stroke-linejoin="round"/>
+      <!-- ============ 17 ============ -->
+      <section class="slide" data-title="Блок 13. Цепочка помощи" data-num="17">
+        <div class="hd"><div class="kick">Блок 13, 15 минут</div><h2>Цепочка помощи: ролевая игра</h2>
+          <p class="lede" style="font-size:18px">Оператор не бегает по кабинетам: у него есть десять минут,
+            чтобы получить помощь. Не получил - вопрос уходит выше.</p></div>
+        <div class="box" style="flex:none;margin-bottom:12px">
+          <svg viewBox="0 0 1180 260" width="100%" height="200"><path d="M26.6 148.3 L126.0 148.0 L226.8 147.6 L226.1 194.0 L226.9 241.1 L126.0 241.5 L26.0 240.4 L27.2 194.0 L26.6 148.3 Z" fill="#1c5fa8" fill-opacity="0.22" stroke="#1c5fa8" stroke-width="2.4" stroke-linejoin="round"/>
 <text x="126.0" y="178.0" font-family="PT Sans, Arial, sans-serif" font-size="15" fill="#22282e" text-anchor="middle">уровень 1</text>
 <text x="126.0" y="218.0" font-family="PT Mono, Consolas, monospace" font-size="32" fill="#1c5fa8" text-anchor="middle" font-weight="700">10 мин</text>
 <text x="126.0" y="182.0" font-family="PT Sans, Arial, sans-serif" font-size="13" fill="#22282e" text-anchor="middle">Мастер участка</text>
@@ -925,62 +957,58 @@
 <text x="1154.0" y="214.0" font-family="PT Sans, Arial, sans-serif" font-size="14" fill="#aeb6bf" text-anchor="end">лимит времени</text></svg>
         </div>
         <div class="grid g3">
-          <div class="box blue"><div class="lab">Что делает оператор</div>
-            <div class="sub">Сообщает сразу: инструмент, качество, техника, материалы, безопасность.
-              Не ждёт конца часа.</div></div>
-          <div class="box orange"><div class="lab">Что делаю я</div>
-            <div class="sub">Меру принимаю сразу и записываю в графу «что сделали».
-              Что не по моим силам - передаю наверх и вешаю на доску проблем.</div></div>
-          <div class="box green"><div class="lab">Как договорились</div>
-            <div class="sub">Лимиты времени согласовали со всеми руководителями, кого это касается,
-              и закрепили у директора. Уровни: 10, 20, 40, 50 и 60 минут.</div></div>
+          <div class="box blue"><div class="lab">Как играем</div>
+            <div class="sub">Три стула. Один - оператор, второй - мастер, третий - наладчик.
+              <b>Секундомер на десять минут.</b> Проблема: сломался резец, запасного нет.</div></div>
+          <div class="box orange"><div class="lab">Что обсуждаем после</div>
+            <div class="sub">Кто кому звонит, <b>за сколько минут</b>, что делают, пока ждут.
+              Обычно выясняется, что договорённости нет, а время уходит.</div></div>
+          <div class="box green"><div class="lab">Что даю на руки</div>
+            <div class="sub">Шаблон цепочки: уровни, фамилии, телефоны и лимиты времени 10, 20, 40, 50, 60 минут.
+              <b>Согласовать со всеми и утвердить у руководителя.</b></div></div>
         </div>
-        <div class="notes"><b>Зачем лимиты.</b> Пока вопрос гуляет по телефонам, станок стоит.
-          Лимит превращает «я позвоню» в обязанность ответить за десять минут.<br>
-          <b>Регистрация.</b> Каждая переданная проблема висит на доске решения проблем.
-          Иначе она исчезает между уровнями и повторяется на следующей смене.</div>
+        <div class="notes"><b>Почему игра, а не рассказ.</b> Когда люди сами проигрывают сценку,
+          они за три минуты находят все дыры в своей цепочке. Рассказ этого не даёт.<br>
+          <b>Регистрация.</b> Каждая переданная проблема должна попадать на доску решения проблем,
+          иначе она исчезает между уровнями и повторяется на следующей смене.</div>
       </section>
 
-      <!-- ============ 16 ============ -->
-      <section class="slide" data-title="Задание и выводы" data-num="16">
-        <div class="hd"><div class="kick">Итоги</div><h2>Задание: соберите бланк на своей операции</h2>
-          <p class="lede" style="font-size:19px">Группы по три-четыре человека, сорок минут.
-            Защита - пять минут, только цифры.</p></div>
+      <!-- ============ 18 ============ -->
+      <section class="slide" data-title="Итоги" data-num="18">
+        <div class="hd"><div class="kick">Итоги, 15 минут</div><h2>Чем закрываю семинар</h2></div>
         <div class="grid g2">
-          <div class="box blue"><div class="lab">Что сделать</div>
+          <div class="box blue"><div class="lab">Домашнее задание</div>
             <ol class="num">
-              <li><b>Выбрать операцию</b> и объяснить, почему именно она.</li>
-              <li><b>Посчитать А, В, С, D и такт</b> для своей смены и задания.</li>
-              <li><b>Сравнить такт с циклом</b> и выбрать, что ставим в план.</li>
-              <li><b>Заполнить бланк по предложенной смене:</b> план, факт, отклонение, причины, кто, что сделали.</li>
-              <li><b>Свести причины в группы</b> и сказать, с какой начинаем.</li>
-            </ol></div>
-          <div class="box orange"><div class="lab">Как буду оценивать</div>
+              <li><b>Посчитать такт</b> своей смены и своей операции</li>
+              <li><b>Повесить бланк</b> и вести его две недели</li>
+              <li><b>Свести причины</b> в шесть полок и назвать главную</li>
+              <li><b>Оформить приказ</b> о ведении ПА на своём участке</li>
+            </ol>
+            <div class="sub" style="margin-top:8px">Через две недели собираемся и смотрим бланки.
+              Кто не начал - разбираем, что помешало.</div></div>
+          <div class="box orange"><div class="lab">Вопросы, которые задают чаще всего</div>
             <ul class="dot">
-              <li>Время посчитано только по регламентированным перерывам.</li>
-              <li>Такт и темп согласованы, единица учёта выбрана по циклу.</li>
-              <li>В каждой ячейке есть накопительный итог, где всё нормально - галочка.</li>
-              <li>У каждого отклонения есть причина, ответственный и мера.</li>
-              <li>По причинам сделан вывод, что чиним первым.</li>
+              <li><b>«А можно вести в Excel?»</b> Можно. Требования к содержанию одни.</li>
+              <li><b>«У нас сменное задание меняется по ходу».</b> Тогда в план вписывайте уточнённое задание
+                и обязательно помечайте это: иначе анализ исказится.</li>
+              <li><b>«Некому заполнять».</b> Оператор, две минуты в час.</li>
+              <li><b>«А если план не выполняется всегда?»</b> Значит, сначала считаем такт:
+                часто план изначально невыполним.</li>
             </ul></div>
-          <div class="box green" style="grid-column:1 / -1"><div class="lab">Пять вещей, которые я прошу забрать с собой</div>
-            <div class="grid g5" style="margin-top:6px">
-              <div class="sub"><b>01.</b> ПА - это про реакцию в течение часа, а не про отчёт за месяц</div>
+          <div class="box green" style="grid-column:1 / -1"><div class="lab">Пять вещей, которые должны остаться у людей в голове</div>
+            <div class="grid g5" style="margin-top:4px">
+              <div class="sub"><b>01.</b> ПА - про реакцию в течение часа, а не про отчёт за месяц</div>
               <div class="sub"><b>02.</b> Сначала такт и цикл, потом бланк</div>
               <div class="sub"><b>03.</b> Отклонение без причины не зафиксировано</div>
               <div class="sub"><b>04.</b> Накопительный итог важнее отдельного часа</div>
               <div class="sub"><b>05.</b> Убираем корень, а не симптом</div>
             </div></div>
         </div>
-        <div class="note-pos red" style="right:52px;bottom:150px;transform:rotate(-3deg)">с понедельника:<br>приказ и бланк<br>на своей операции</div>
-        <svg class="arw" style="right:210px;bottom:168px;width:76px;height:52px;transform:rotate(-152deg)" viewBox="0 0 76 52">
-          <path d="M3 5 C 17 24, 44 33, 60 46" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M46 46 L60 46 L60 32" fill="none" stroke="#c92a2a" stroke-width="2.6" stroke-linecap="round"/></svg>
-        <div class="notes"><b>Организация.</b> Каждой группе выдаю свои исходные: длительность смены,
-          перерывы, объём задания, замер цикла и факт по часам.<br>
-          <b>Что спросить на защите.</b> Покажите накопительное отклонение и назовите корень самой большой группы.
-          Если отвечают «люди не успевают», прошу пять почему.<br>
-          <b>Домашнее задание.</b> Оформите приказ или распоряжение о ведении ПА на своём участке.</div>
+        <div class="notes"><b>Как проверить, что семинар удался.</b> Через две недели: бланки висят,
+          заполняются по часам, в графе причина не пусто, по топ-причине назначен ответственный.
+          Если висят, но пустые - семинар был лекцией.<br>
+          <b>Последняя фраза.</b> «С завтрашнего утра у вас на участке должен появиться бланк.
+          Не идеальный, кривой, но свой. Начните с него».</div>
       </section>
 
     </div>
@@ -992,7 +1020,7 @@
   <div class="hud">
     <button id="prev">назад</button>
     <button id="next">вперёд</button>
-    <span class="count" id="count">01 / 16</span>
+    <span class="count" id="count">01 / 18</span>
     <span class="title" id="crumb">Титул</span>
     <button id="btnOv">все экраны</button>
     <button id="btnNotes">заметки</button>
